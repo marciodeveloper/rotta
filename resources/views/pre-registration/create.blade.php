@@ -85,7 +85,7 @@
                     @if ($googleMapsApiKey)
                         <div class="place-search"><span>Buscar endereço com Google</span><div data-google-place data-google-key="{{ $googleMapsApiKey }}"></div><small>Você também pode preencher manualmente abaixo.</small></div>
                     @endif
-                    <div class="cep-row"><label class="field"><span>CEP</span><input name="postal_code" value="{{ old('postal_code') }}" inputmode="numeric" maxlength="9" data-cep-input x-bind:disabled="hasServiceArea"></label><button class="button button-secondary" type="button" data-cep-button>Buscar CEP</button><span data-cep-status aria-live="polite"></span></div>
+                    <div class="cep-row"><label class="field"><span>CEP</span><input name="postal_code" value="{{ old('postal_code') }}" inputmode="numeric" autocomplete="postal-code" maxlength="9" data-cep-input aria-describedby="cep-status" x-bind:disabled="hasServiceArea"></label><button class="button button-secondary" type="button" formnovalidate data-cep-button>Buscar CEP</button><span id="cep-status" data-cep-status role="status" aria-live="polite"></span></div>
                     <div class="field-grid">
                         <label class="field field-wide"><span>Logradouro</span><input name="street" value="{{ old('street') }}" maxlength="180" data-address-field="street" x-bind:disabled="hasServiceArea"></label>
                         <label class="field"><span>Número</span><input name="street_number" value="{{ old('street_number') }}" maxlength="30" x-bind:disabled="hasServiceArea"></label>

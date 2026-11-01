@@ -22,11 +22,20 @@ class PreRegistrationControllerTest extends TestCase
     {
         PrivacyNotice::factory()->published()->create(['version' => '2026-11-01']);
 
-        $this->get(route('pre-registration.create'))
+        $response = $this->get(route('pre-registration.create'))
             ->assertOk()
             ->assertSee('Versão 2026-11-01')
             ->assertSee('/privacidade/', false)
             ->assertSee('Leia o aviso de privacidade completo');
+
+        $this->assertMatchesRegularExpression(
+            '/<button[^>]*type="button"[^>]*formnovalidate[^>]*data-cep-button[^>]*>Buscar CEP<\/button>/',
+            $response->getContent(),
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<button[^>]*data-cep-button[^>]*(?:formaction|formmethod)=/',
+            $response->getContent(),
+        );
     }
 
     public function test_valid_payload_creates_encrypted_record_and_transactional_outbox(): void

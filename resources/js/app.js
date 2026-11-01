@@ -1,4 +1,5 @@
 import Alpine from '@alpinejs/csp';
+import { installCepLookup } from './cep-lookup';
 
 Alpine.data('preRegistrationForm', () => ({
     step: 1,
@@ -111,34 +112,7 @@ document.querySelectorAll('input[name="phone"]').forEach((input) => {
 });
 
 const cepInput = document.querySelector('[data-cep-input]');
-const cepButton = document.querySelector('[data-cep-button]');
-const cepStatus = document.querySelector('[data-cep-status]');
-
-cepButton?.addEventListener('click', async () => {
-    const postalCode = onlyDigits(cepInput?.value ?? '');
-    if (postalCode.length !== 8) {
-        cepStatus.textContent = 'Informe um CEP com 8 dígitos.';
-        return;
-    }
-
-    cepButton.disabled = true;
-    cepStatus.textContent = 'Buscando…';
-    try {
-        const response = await fetch(`/api/cep?postal_code=${encodeURIComponent(postalCode)}`, { headers: { Accept: 'application/json' } });
-        const payload = await response.json();
-        if (! response.ok) throw new Error(payload.message ?? 'CEP não encontrado.');
-        Object.entries(payload.data).forEach(([name, value]) => {
-            const field = document.querySelector(`[data-address-field="${name}"]`);
-            if (field) field.value = value;
-        });
-        if (cepInput) cepInput.value = postalCode.replace(/(\d{5})(\d{3})/, '$1-$2');
-        cepStatus.textContent = 'Endereço preenchido. Revise antes de continuar.';
-    } catch (error) {
-        cepStatus.textContent = error instanceof Error ? error.message : 'Não foi possível buscar o CEP.';
-    } finally {
-        cepButton.disabled = false;
-    }
-});
+installCepLookup();
 
 const placeMount = document.querySelector('[data-google-place]');
 if (placeMount?.dataset.googleKey) {

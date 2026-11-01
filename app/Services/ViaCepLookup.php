@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Contracts\CepLookup;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
+use UnexpectedValueException;
 
 class ViaCepLookup implements CepLookup
 {
@@ -19,8 +21,16 @@ class ViaCepLookup implements CepLookup
             ->timeout(4)
             ->get(rtrim((string) config('prelaunch.cep.base_url'), '/').'/'.$postalCode.'/json/');
 
-        if (! $response->successful() || $response->json('erro') === true) {
+        if (! $response->successful()) {
+            throw new RuntimeException('CEP provider unavailable.');
+        }
+
+        if ($response->json('erro') === true) {
             return null;
+        }
+
+        if (! is_string($response->json('localidade')) || ! is_string($response->json('uf')) || ! preg_match('/^[A-Z]{2}$/', $response->json('uf'))) {
+            throw new UnexpectedValueException('CEP provider returned an invalid address.');
         }
 
         return [
