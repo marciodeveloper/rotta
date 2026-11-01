@@ -6,10 +6,12 @@
 - Senhas com o hasher do Laravel e MFA TOTP obrigatório antes da sessão autenticada.
 - CSRF, cookies de sessão criptografados, `HttpOnly`, `SameSite=Lax` e `Secure` em produção.
 - Rate limiting separado para formulário, confirmação, CEP e autenticação.
-- Turnstile validado no servidor antes de qualquer escrita e honeypot com resposta neutra.
-- CPF/CNPJ validados por dígitos verificadores; duplicidade por HMAC com pepper independente.
+- Turnstile validado no servidor antes de qualquer escrita, incluindo hostname, action, idade do desafio, timeouts e falha fechada; honeypot com resposta neutra.
+- CPF e CNPJ numérico/alfanumérico validados por dígitos verificadores; duplicidade por HMAC separado por domínio, mantendo hashes legados durante o backfill.
 - Campos pessoais criptografados pelo Laravel; filtros usam somente dados minimizados não criptografados.
-- Tokens de confirmação aleatórios, armazenados como hash, expiráveis e de uso único.
+- Tokens de confirmação aleatórios, armazenados como hash, expiráveis e de uso único; GET não consome o token e POST protegido por CSRF confirma.
+- TOTP rejeita reutilização do mesmo time-step; recovery codes são hasheados e consumidos atomicamente.
+- Mídias ficam em disco privado, são reencodadas e limitadas por tipo, tamanho, dimensões e quantidade; SVG e formatos ativos são recusados.
 - CSP, HSTS em HTTPS, `frame-ancestors 'none'`, `nosniff`, política de referência e de permissões.
 - Exportação autenticada, auditada, em streaming e protegida contra fórmula de planilha.
 
