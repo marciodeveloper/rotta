@@ -70,34 +70,43 @@
 
   <main id="conteudo">
     <section class="hero" aria-labelledby="heroTitle">
-      <img class="hero-image" src="https://images.unsplash.com/photo-1724161438805-dc1d37cddb35?auto=format&fit=crop&w=2400&q=88" alt="Viajante em silhueta diante de montanhas durante o pôr do sol" fetchpriority="high">
+      <div class="hero-media" data-protected-media aria-label="Fotografias autorais de Vassouras e Miguel Pereira">
+        <img class="hero-image is-active" src="./assets/photos/vassouras-igreja-praca.webp" data-fallback="https://images.unsplash.com/photo-1724161438805-dc1d37cddb35?auto=format&fit=crop&w=2400&q=88" alt="Igreja histórica e praça de Vassouras" fetchpriority="high" draggable="false">
+        <img class="hero-image" src="./assets/photos/miguel-pereira-maria-fumaca.webp" data-fallback="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=2400&q=88" alt="" aria-hidden="true" draggable="false">
+      </div>
       <div class="hero-shade"></div>
       <div class="hero-contour" aria-hidden="true"></div>
       <div class="hero-inner page-width">
         <div class="hero-copy">
           <div class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> Turismo · Cultura · Negócios · Experiências</div>
           <h1 id="heroTitle">Tem lugar que a gente <em>leva pra vida.</em></h1>
-          <p>Descubra destinos, viva experiências autênticas e conheça os negócios e as pessoas que tornam cada lugar único.</p>
+          <p>De Vassouras a Miguel Pereira, descubra patrimônios, paisagens, sabores e experiências que ficam com você.</p>
           <div class="hero-actions">
             <a class="button button-copper" href="#destinos">Explorar descobertas <span aria-hidden="true">↗</span></a>
             <button class="button button-glass" type="button" data-open-story>Conheça a ROTTA <span aria-hidden="true">▶</span></button>
           </div>
           <div class="hero-footnote"><span class="footnote-mark"></span> Pessoas, lugares e histórias em movimento.</div>
+          <div class="hero-pagination" id="heroPagination" aria-label="Selecionar imagem de destaque">
+            <button type="button" data-hero-slide="0" aria-label="Ver Vassouras" aria-current="true"></button>
+            <button type="button" data-hero-slide="1" aria-label="Ver Maria-fumaça"></button>
+            <button type="button" data-hero-slide="2" aria-label="Ver Miguel Pereira à noite"></button>
+            <button type="button" data-hero-slide="3" aria-label="Ver paisagens de Vassouras"></button>
+          </div>
         </div>
         <div class="hero-aside" aria-label="Manifesto ROTTA">
           <div class="aside-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
           <div class="aside-card">
             <span class="aside-index">01 <i>/ 04</i></span>
             <span class="aside-rule"></span>
-            <strong>O melhor de um lugar está no que você vive nele.</strong>
-            <span class="aside-caption">Descobrir é só o começo.</span>
+            <strong>Há lugares onde o tempo deixa marcas bonitas.</strong>
+            <span class="aside-caption">Vassouras · patrimônio e memória.</span>
           </div>
-          <div class="hero-coordinate">22° 24' S <span>·</span> 43° 39' W</div>
+          <div class="hero-coordinate">VALE DO CAFÉ <span>·</span> RJ</div>
         </div>
       </div>
       <div class="hero-bottom page-width">
         <span>Descubra sem pressa.</span>
-        <span class="hero-bottom-center">Uma nova forma de se conectar com cada destino</span>
+        <span class="hero-bottom-center">Vassouras + Miguel Pereira · Rio de Janeiro</span>
         <a href="#destinos" aria-label="Rolar para descobrir">↓</a>
       </div>
     </section>
@@ -160,7 +169,28 @@
           </div>
         </div>
         <div class="destination-grid" id="destinationGrid"></div>
-        <div class="section-endline"><span>01 <i>/</i> Descubra novos horizontes</span><span class="endline-rule"></span><span>Imagens ilustrativas</span></div>
+        <div class="section-endline"><span>01 <i>/</i> Descubra novos horizontes</span><span class="endline-rule"></span><span>Fotografia autoral · Acervo ROTTA</span></div>
+      </div>
+    </section>
+
+    <section class="region-section" id="territorio">
+      <div class="page-width">
+        <div class="section-heading section-heading-split">
+          <div>
+            <div class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> Miguel Pereira · RJ</div>
+            <h2>Uma cidade de muitos<br><em>caminhos e encontros.</em></h2>
+          </div>
+          <div class="section-intro section-intro-light">
+            <p>Da memória da Maria-fumaça aos passeios que revelam novos ângulos da cidade. Descubra o destino no seu ritmo — de dia, ao entardecer ou quando as luzes se acendem.</p>
+            <a class="text-link text-link-light" href="#experiencias">Ver experiências <span>↗</span></a>
+          </div>
+        </div>
+        <div class="region-feature-grid" id="regionFeatureGrid"></div>
+        <div class="region-discoveries">
+          <span class="region-discoveries-label">E ainda tem muito para descobrir</span>
+          <div class="region-place-list" id="regionPlaceList"></div>
+        </div>
+        <div class="section-endline section-endline-dark"><span>02 <i>/</i> Um destino, muitas histórias</span><span class="endline-rule"></span><span>Fotografia autoral · Acervo ROTTA</span></div>
       </div>
     </section>
 

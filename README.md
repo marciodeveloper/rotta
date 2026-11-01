@@ -52,3 +52,10 @@ Não existe backend, login real, envio de formulário, contato WhatsApp, reserva
 - docs/brand-system.md — sistema visual e direção de arte.
 - docs/product-architecture.md — pilares e evolução do produto.
 - docs/asset-credits.md — fontes das imagens demonstrativas.
+
+
+## Fotografias regionais e proteção
+
+As fotografias autorais otimizadas ficam em `assets/photos/`. O pacote de assets da rodada regional contém os arquivos WebP usados pela hero, destinos e destaques de Miguel Pereira. Copie o conteúdo do pacote para essa pasta antes de remover os fallbacks ilustrativos.
+
+A interface dificulta o salvamento casual por menu de contexto, arraste e seleção sobre as imagens. Isso não impede captura de tela, inspeção de rede ou download técnico: todo arquivo publicado em um site público pode ser recuperado. Por isso, publique somente versões otimizadas e mantenha os originais fora do repositório.

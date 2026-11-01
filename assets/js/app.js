@@ -1,5 +1,8 @@
 import {
+  heroSlides,
   destinations,
+  regionalHighlights,
+  regionalPlaces,
   experiences,
   businesses,
   products,
@@ -66,14 +69,104 @@ function renderDestinations() {
   if (!root) return;
   root.innerHTML = destinations.map((item, index) => {
     return '<article class="destination-card destination-card-' + (index + 1) + ' reveal">' +
-      '<img src="' + escapeHTML(item.image) + '" alt="' + escapeHTML(item.alt) + '" loading="lazy" decoding="async">' +
+      '<div class="destination-media' + (item.protected ? ' protected-media' : '') + '"' + (item.protected ? ' data-protected-media' : '') + '>' +
+      '<img src="' + escapeHTML(item.image) + '" data-fallback="' + escapeHTML(item.fallback || '') + '" alt="' + escapeHTML(item.alt) + '" loading="lazy" decoding="async" draggable="false"></div>' +
       '<div class="destination-gradient"></div>' +
+      (item.protected ? '<span class="photo-credit destination-photo-credit">Fotografia autoral · Acervo ROTTA</span>' : '') +
       '<div class="destination-topline"><span>' + escapeHTML(item.tag) + '</span><span class="destination-index">0' + (index + 1) + '</span></div>' +
       '<div class="destination-content"><span class="destination-location">' + escapeHTML(item.location) + '</span>' +
       '<h3>' + escapeHTML(item.title) + '</h3><p>' + escapeHTML(item.subtitle) + '</p>' +
       '<button class="circle-arrow" type="button" data-detail="destination:' + item.id + '" aria-label="Ver ' + escapeHTML(item.title) + '">' + icons.arrow + '</button></div>' +
       '</article>';
   }).join('');
+}
+
+function renderRegionalHighlights() {
+  const root = $('#regionFeatureGrid');
+  const places = $('#regionPlaceList');
+  if (root) {
+    root.innerHTML = regionalHighlights.map((item, index) => {
+      return '<article class="region-feature-card reveal">' +
+        '<div class="region-feature-media protected-media" data-protected-media>' +
+        '<img src="' + escapeHTML(item.image) + '" data-fallback="' + escapeHTML(item.fallback || '') + '" alt="' + escapeHTML(item.alt) + '" loading="lazy" decoding="async" draggable="false">' +
+        '<span class="photo-credit">' + escapeHTML(item.credit || 'Fotografia autoral · Acervo ROTTA') + '</span>' +
+        '<span class="region-feature-index">0' + (index + 1) + '</span></div>' +
+        '<div class="region-feature-body"><span class="region-feature-category">' + escapeHTML(item.category) + '</span>' +
+        '<h3>' + escapeHTML(item.title) + '</h3><p>' + escapeHTML(item.description) + '</p>' +
+        '<span class="region-feature-location">' + icons.pin + escapeHTML(item.location) + '</span></div></article>';
+    }).join('');
+  }
+  if (places) {
+    places.innerHTML = regionalPlaces.map(place => '<span class="region-place-chip">' + escapeHTML(place) + '</span>').join('');
+  }
+}
+
+function initHeroCarousel() {
+  const root = $('.hero');
+  const layers = root ? Array.from(root.querySelectorAll('.hero-image')) : [];
+  const pagination = $('#heroPagination');
+  if (!root || layers.length < 2 || !heroSlides.length) return;
+
+  let currentIndex = 0;
+  let activeLayer = layers[0];
+
+  const updateMeta = (index) => {
+    const slide = heroSlides[index];
+    const counter = $('.aside-index', root);
+    const statement = $('.aside-card strong', root);
+    const caption = $('.aside-caption', root);
+    if (counter) counter.innerHTML = String(index + 1).padStart(2, '0') + ' <i>/ ' + String(heroSlides.length).padStart(2, '0') + '</i>';
+    if (statement) statement.textContent = slide.statement;
+    if (caption) caption.textContent = slide.caption;
+    if (pagination) {
+      Array.from(pagination.querySelectorAll('[data-hero-slide]')).forEach(button => {
+        const active = Number(button.dataset.heroSlide) === index;
+        button.classList.toggle('is-active', active);
+        if (active) button.setAttribute('aria-current', 'true');
+        else button.removeAttribute('aria-current');
+      });
+    }
+  };
+
+  const setSlide = (index) => {
+    if (index === currentIndex) return;
+    const slide = heroSlides[index];
+    const nextLayer = activeLayer === layers[0] ? layers[1] : layers[0];
+    const activate = () => {
+      nextLayer.classList.add('is-active');
+      nextLayer.removeAttribute('aria-hidden');
+      activeLayer.classList.remove('is-active');
+      activeLayer.setAttribute('aria-hidden', 'true');
+      activeLayer = nextLayer;
+      currentIndex = index;
+      updateMeta(index);
+      nextLayer.onload = null;
+    };
+    nextLayer.onload = activate;
+    nextLayer.dataset.fallback = slide.fallback || '';
+    nextLayer.dataset.fallbackApplied = 'false';
+    nextLayer.alt = slide.alt;
+    nextLayer.removeAttribute('aria-hidden');
+    if (nextLayer.getAttribute('src') === slide.image && nextLayer.complete && nextLayer.naturalWidth > 0) {
+      activate();
+      return;
+    }
+    nextLayer.src = slide.image;
+    if (nextLayer.complete && nextLayer.naturalWidth > 0) activate();
+  };
+
+  updateMeta(currentIndex);
+  if (pagination) {
+    pagination.addEventListener('click', event => {
+      const button = event.target.closest('[data-hero-slide]');
+      if (!button) return;
+      setSlide(Number(button.dataset.heroSlide));
+    });
+  }
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    window.setInterval(() => setSlide((currentIndex + 1) % heroSlides.length), 7800);
+  }
 }
 
 function experienceCard(item) {
@@ -149,7 +242,7 @@ function findItem(type, id) {
 function openDetail(type, id) {
   const item = findItem(type, id);
   if (!item) return;
-  const imageMarkup = item.image ? '<div class="detail-image"><img src="' + escapeHTML(item.image) + '" alt="' + escapeHTML(item.alt || item.title || item.name) + '"></div>' : '';
+  const imageMarkup = item.image ? '<div class="detail-image' + (item.protected ? ' protected-media' : '') + '"' + (item.protected ? ' data-protected-media' : '') + '><img src="' + escapeHTML(item.image) + '" data-fallback="' + escapeHTML(item.fallback || '') + '" alt="' + escapeHTML(item.alt || item.title || item.name) + '" draggable="false">' + (item.protected ? '<span class="photo-credit">Fotografia autoral · Acervo ROTTA</span>' : '') + '</div>' : '';
   const title = item.title || item.name;
   const category = item.category || item.tag || item.type || 'ROTTA';
   let facts = '';
@@ -188,7 +281,7 @@ function openAccessDialog() {
 function openStoryDialog() {
   const story = stories[0];
   openDialog('ROTTA histórias · conteúdo demonstrativo', 'Todo lugar tem uma história.',
-    '<div class="story-dialog-image"><img src="' + escapeHTML(story.image) + '" alt="Rua histórica em uma cidade brasileira"><span class="story-play-badge">▶</span></div>' +
+    '<div class="story-dialog-image protected-media" data-protected-media><img src="' + escapeHTML(story.image) + '" data-fallback="' + escapeHTML(story.fallback || '') + '" alt="' + escapeHTML(story.alt || story.title) + '" draggable="false"><span class="photo-credit">Fotografia autoral · Acervo ROTTA</span><span class="story-play-badge">▶</span></div>' +
     '<p class="dialog-lead">A ROTTA nasce do desejo de aproximar pessoas dos lugares que visitam. Por trás de cada fachada, receita, trilha ou pequeno negócio existe uma história esperando para ser descoberta.</p>' +
     '<div class="story-dialog-caption"><span>01 / OLHAR HUMANO</span><span>Conteúdo audiovisual · Cultura · Experiências</span></div>' +
     '<div class="demo-disclaimer">O player audiovisual e os episódios reais serão conectados em uma etapa posterior. Esta é uma prévia conceitual.</div>');
@@ -271,6 +364,27 @@ function closeMobileMenu() {
   toggle.setAttribute('aria-label', 'Abrir menu');
   document.body.classList.remove('menu-open');
 }
+
+document.addEventListener('error', event => {
+  const image = event.target;
+  if (!(image instanceof HTMLImageElement)) return;
+  if (image.dataset.fallback && image.dataset.fallbackApplied !== 'true') {
+    image.dataset.fallbackApplied = 'true';
+    image.src = image.dataset.fallback;
+  }
+}, true);
+
+document.addEventListener('contextmenu', event => {
+  if (event.target instanceof Element && event.target.closest('[data-protected-media]')) event.preventDefault();
+});
+
+document.addEventListener('dragstart', event => {
+  if (event.target instanceof Element && event.target.closest('[data-protected-media]')) event.preventDefault();
+});
+
+document.addEventListener('selectstart', event => {
+  if (event.target instanceof Element && event.target.closest('[data-protected-media]')) event.preventDefault();
+});
 
 document.addEventListener('click', event => {
   const menuToggle = event.target.closest('.menu-toggle');
@@ -382,6 +496,8 @@ document.addEventListener('submit', event => {
 $('#currentYear').textContent = new Date().getFullYear();
 
 renderDestinations();
+renderRegionalHighlights();
+initHeroCarousel();
 renderExperiences('Todas');
 renderBusinesses();
 renderProducts();
