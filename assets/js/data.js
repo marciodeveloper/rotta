@@ -16,6 +16,7 @@ export const heroSlides = [
   },
   {
     image: localPhoto("miguel-pereira-rua-do-aroma.webp"),
+    framing: "portrait",
     fallback: image("photo-1519608487953-e999c86e7455", 2400),
     alt: "Placa da Rua do Aroma em Miguel Pereira",
     statement: "Por trás de cada endereço, existe gente fazendo acontecer.",
@@ -23,6 +24,7 @@ export const heroSlides = [
   },
   {
     image: localPhoto("miguel-pereira-trex-restaurant.webp"),
+    framing: "portrait",
     fallback: image("photo-1517248135467-4c7edcad34c4", 2400),
     alt: "Entrada temática do T-Rex Restaurant em Miguel Pereira",
     statement: "Produtos, sabores e serviços com identidade local.",
@@ -37,6 +39,7 @@ export const heroSlides = [
   },
   {
     image: localPhoto("vassouras-ponte-historica.webp"),
+    framing: "portrait",
     fallback: image("photo-1470770841072-f978cf4d019e", 2400),
     alt: "Ponte histórica em Vassouras",
     statement: "Conexões que aproximam pessoas, ideias e possibilidades.",

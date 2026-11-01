@@ -143,6 +143,7 @@ function initHeroCarousel() {
       nextLayer.onload = null;
     };
     nextLayer.onload = activate;
+    nextLayer.dataset.framing = slide.framing || 'landscape';
     nextLayer.dataset.fallback = slide.fallback || '';
     nextLayer.dataset.fallbackApplied = 'false';
     nextLayer.alt = slide.alt;
