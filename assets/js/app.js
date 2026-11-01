@@ -44,6 +44,7 @@ function showToast(message) {
 }
 
 function openDialog(eyebrow, title, content) {
+  closeMobileMenu();
   dialogEyebrow.textContent = eyebrow;
   dialogTitle.textContent = title;
   dialogContent.innerHTML = content;

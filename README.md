@@ -21,6 +21,13 @@ python -m http.server 8080
 
 Acesse http://localhost:8080.
 
+## Validar
+Com Node.js 22 ou superior:
+
+~~~bash
+npm run check
+~~~
+
 ## Publicar no GitHub Pages
 1. Faça merge da branch de protótipo para main.
 2. No GitHub, abra **Settings → Pages**.
