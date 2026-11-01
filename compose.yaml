@@ -1,0 +1,68 @@
+name: rotta-prelaunch
+
+services:
+  app:
+    build:
+      context: .
+      target: development
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY}
+      APP_URL: http://localhost:8000
+      PRELAUNCH_DATA_PEPPER: ${PRELAUNCH_DATA_PEPPER}
+      DB_CONNECTION: pgsql
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_DATABASE: rotta_prelaunch
+      DB_USERNAME: rotta_prelaunch
+      DB_PASSWORD: ${DB_PASSWORD:-local-only-database-password}
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      SESSION_ENCRYPT: "true"
+      SESSION_SECURE_COOKIE: "false"
+      MAIL_MAILER: array
+    depends_on:
+      database:
+        condition: service_healthy
+    networks: [rotta_prelaunch_internal]
+    restart: unless-stopped
+
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: rotta_prelaunch
+      POSTGRES_USER: rotta_prelaunch
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-local-only-database-password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rotta_prelaunch -d rotta_prelaunch"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - rotta_prelaunch_pgdata:/var/lib/postgresql/data
+    networks: [rotta_prelaunch_internal]
+    restart: unless-stopped
+
+  database_test:
+    image: postgres:17-alpine
+    profiles: [test]
+    environment:
+      POSTGRES_DB: rotta_prelaunch_test
+      POSTGRES_USER: rotta_prelaunch_test
+      POSTGRES_PASSWORD: local-only-test-password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rotta_prelaunch_test -d rotta_prelaunch_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    tmpfs:
+      - /var/lib/postgresql/data
+    networks: [rotta_prelaunch_internal]
+
+networks:
+  rotta_prelaunch_internal:
+    internal: true
+
+volumes:
+  rotta_prelaunch_pgdata:
