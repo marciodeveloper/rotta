@@ -70,9 +70,9 @@ function renderDestinations() {
   root.innerHTML = destinations.map((item, index) => {
     return '<article class="destination-card destination-card-' + (index + 1) + ' reveal">' +
       '<div class="destination-media' + (item.protected ? ' protected-media' : '') + '"' + (item.protected ? ' data-protected-media' : '') + '>' +
-      '<img src="' + escapeHTML(item.image) + '" data-fallback="' + escapeHTML(item.fallback || '') + '" alt="' + escapeHTML(item.alt) + '" loading="lazy" decoding="async" draggable="false">' +
-      (item.protected ? '<span class="photo-credit">Fotografia autoral · Acervo ROTTA</span>' : '') + '</div>' +
+      '<img src="' + escapeHTML(item.image) + '" data-fallback="' + escapeHTML(item.fallback || '') + '" alt="' + escapeHTML(item.alt) + '" loading="lazy" decoding="async" draggable="false"></div>' +
       '<div class="destination-gradient"></div>' +
+      (item.protected ? '<span class="photo-credit destination-photo-credit">Fotografia autoral · Acervo ROTTA</span>' : '') +
       '<div class="destination-topline"><span>' + escapeHTML(item.tag) + '</span><span class="destination-index">0' + (index + 1) + '</span></div>' +
       '<div class="destination-content"><span class="destination-location">' + escapeHTML(item.location) + '</span>' +
       '<h3>' + escapeHTML(item.title) + '</h3><p>' + escapeHTML(item.subtitle) + '</p>' +
@@ -103,7 +103,7 @@ function renderRegionalHighlights() {
 
 function initHeroCarousel() {
   const root = $('.hero');
-  const layers = $('.hero-image', root);
+  const layers = root ? Array.from(root.querySelectorAll('.hero-image')) : [];
   const pagination = $('#heroPagination');
   if (!root || layers.length < 2 || !heroSlides.length) return;
 
@@ -134,7 +134,9 @@ function initHeroCarousel() {
     const nextLayer = activeLayer === layers[0] ? layers[1] : layers[0];
     const activate = () => {
       nextLayer.classList.add('is-active');
+      nextLayer.removeAttribute('aria-hidden');
       activeLayer.classList.remove('is-active');
+      activeLayer.setAttribute('aria-hidden', 'true');
       activeLayer = nextLayer;
       currentIndex = index;
       updateMeta(index);
@@ -240,7 +242,7 @@ function findItem(type, id) {
 function openDetail(type, id) {
   const item = findItem(type, id);
   if (!item) return;
-  const imageMarkup = item.image ? '<div class="detail-image"><img src="' + escapeHTML(item.image) + '" alt="' + escapeHTML(item.alt || item.title || item.name) + '"></div>' : '';
+  const imageMarkup = item.image ? '<div class="detail-image' + (item.protected ? ' protected-media' : '') + '"' + (item.protected ? ' data-protected-media' : '') + '><img src="' + escapeHTML(item.image) + '" data-fallback="' + escapeHTML(item.fallback || '') + '" alt="' + escapeHTML(item.alt || item.title || item.name) + '" draggable="false">' + (item.protected ? '<span class="photo-credit">Fotografia autoral · Acervo ROTTA</span>' : '') + '</div>' : '';
   const title = item.title || item.name;
   const category = item.category || item.tag || item.type || 'ROTTA';
   let facts = '';
@@ -279,7 +281,7 @@ function openAccessDialog() {
 function openStoryDialog() {
   const story = stories[0];
   openDialog('ROTTA histórias · conteúdo demonstrativo', 'Todo lugar tem uma história.',
-    '<div class="story-dialog-image"><img src="' + escapeHTML(story.image) + '" alt="Rua histórica em uma cidade brasileira"><span class="story-play-badge">▶</span></div>' +
+    '<div class="story-dialog-image protected-media" data-protected-media><img src="' + escapeHTML(story.image) + '" data-fallback="' + escapeHTML(story.fallback || '') + '" alt="' + escapeHTML(story.alt || story.title) + '" draggable="false"><span class="photo-credit">Fotografia autoral · Acervo ROTTA</span><span class="story-play-badge">▶</span></div>' +
     '<p class="dialog-lead">A ROTTA nasce do desejo de aproximar pessoas dos lugares que visitam. Por trás de cada fachada, receita, trilha ou pequeno negócio existe uma história esperando para ser descoberta.</p>' +
     '<div class="story-dialog-caption"><span>01 / OLHAR HUMANO</span><span>Conteúdo audiovisual · Cultura · Experiências</span></div>' +
     '<div class="demo-disclaimer">O player audiovisual e os episódios reais serão conectados em uma etapa posterior. Esta é uma prévia conceitual.</div>');
