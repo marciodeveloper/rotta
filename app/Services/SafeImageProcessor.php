@@ -44,6 +44,9 @@ class SafeImageProcessor
             };
             $optimizedBytes = $this->encode($optimized, $mime);
             $thumbnailBytes = $this->encode($thumbnail, $mime);
+            if (strlen($optimizedBytes) > (int) config('prelaunch.media.max_image_bytes')) {
+                $this->reject('A imagem otimizada excede o limite de 5 MB.');
+            }
             $optimizedWidth = imagesx($optimized);
             $optimizedHeight = imagesy($optimized);
             imagedestroy($optimized);

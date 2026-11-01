@@ -78,6 +78,23 @@ class PreRegistrationControllerTest extends TestCase
         $this->assertDatabaseCount('pre_registrations', 0);
     }
 
+    public function test_rejects_more_than_eight_images_and_files_above_five_megabytes(): void
+    {
+        $notice = PrivacyNotice::factory()->published()->create(['version' => '2026.01']);
+        $payload = [...$this->validPayload($notice),
+            'cover' => UploadedFile::fake()->create('cover.jpg', 5_121, 'image/jpeg'),
+            'cover_alt' => 'Capa sintética',
+            'gallery' => collect(range(1, 7))->map(fn (int $index) => UploadedFile::fake()->image("gallery-{$index}.jpg"))->all(),
+            'gallery_alt' => collect(range(1, 7))->map(fn (int $index) => "Imagem sintética {$index}")->all(),
+            'media_rights_confirmed' => '1',
+        ];
+
+        $response = $this->post(route('pre-registration.store'), $payload);
+
+        $response->assertInvalid(['cover', 'gallery']);
+        $this->assertDatabaseCount('pre_registrations', 0);
+    }
+
     public function test_duplicate_document_returns_neutral_response_without_new_record_or_email(): void
     {
         Queue::fake();

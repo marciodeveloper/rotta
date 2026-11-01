@@ -110,7 +110,7 @@
                 <div class="review-note"><strong>Antes de enviar</strong><p>Confirme os dados nas etapas anteriores. Após o envio, mandaremos um link de confirmação ao e-mail informado.</p></div>
                 <fieldset class="media-uploader" data-media-uploader>
                     <legend>Imagens do negócio <small>opcional</small></legend>
-                    <p>JPEG, PNG ou WebP. Logo até 5 MB; demais imagens até 8 MB. As imagens ficam privadas até aprovação.</p>
+                    <p>JPEG, PNG ou WebP. Até 5 MB por imagem e oito imagens no total. As imagens ficam privadas até aprovação.</p>
                     <div class="media-slot"><label><span>Logo</span><input type="file" name="logo" accept="image/jpeg,image/png,image/webp" data-media-input="logo"></label><label class="field"><span>Descrição alternativa</span><input name="logo_alt" maxlength="240" value="{{ old('logo_alt') }}"></label><div data-media-preview="logo"></div></div>
                     <div class="media-slot"><label><span>Foto de capa</span><input type="file" name="cover" accept="image/jpeg,image/png,image/webp" data-media-input="cover"></label><label class="field"><span>Descrição alternativa</span><input name="cover_alt" maxlength="240" value="{{ old('cover_alt') }}"></label><div data-media-preview="cover"></div></div>
                     <div class="media-dropzone" data-gallery-dropzone tabindex="0" role="button"><strong>Fotografias</strong><span>Arraste até seis imagens ou selecione arquivos.</span><input type="file" name="gallery[]" accept="image/jpeg,image/png,image/webp" multiple data-gallery-input></div>

@@ -40,7 +40,7 @@ return [
 
         'prelaunch_media' => [
             'driver' => env('PRELAUNCH_MEDIA_DRIVER', 'local'),
-            'root' => storage_path('app/private/pre-registration-media'),
+            'root' => env('PRELAUNCH_MEDIA_ROOT', storage_path('app/private/pre-registration-media')),
             'key' => env('PRELAUNCH_MEDIA_ACCESS_KEY'),
             'secret' => env('PRELAUNCH_MEDIA_SECRET_KEY'),
             'region' => env('PRELAUNCH_MEDIA_REGION'),
@@ -48,6 +48,10 @@ return [
             'endpoint' => env('PRELAUNCH_MEDIA_ENDPOINT'),
             'use_path_style_endpoint' => env('PRELAUNCH_MEDIA_PATH_STYLE', false),
             'visibility' => 'private',
+            'permissions' => [
+                'file' => ['public' => 0600, 'private' => 0600],
+                'dir' => ['public' => 0700, 'private' => 0700],
+            ],
             'throw' => true,
             'report' => true,
         ],

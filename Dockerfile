@@ -7,7 +7,7 @@ COPY vite.config.js ./
 RUN npm run build
 
 FROM php:8.3-fpm-alpine AS php-base
-RUN apk add --no-cache icu-dev libpq-dev libzip-dev oniguruma-dev libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev \
+RUN apk add --no-cache icu-dev libpq-dev libzip-dev oniguruma-dev libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev postgresql-client \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install bcmath exif gd intl mbstring opcache pdo_pgsql zip \
     && addgroup -g 10001 -S rotta \

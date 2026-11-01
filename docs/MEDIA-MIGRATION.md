@@ -18,3 +18,16 @@ O CSV existente permanece inalterado. O manifesto de mídia é transferido separ
 ## Operação
 
 `prelaunch:media:cleanup-orphans` apenas relata por padrão; `--force` remove objetos não referenciados com idade superior ao limite. `prelaunch:hashes:backfill --dry-run` mede a migração de hashes legados, e a execução sem `--dry-run` preenche os hashes separados preservando as colunas antigas durante a transição.
+
+Durante a campanha temporária, o disk `prelaunch_media` aponta para `/var/lib/rotta-prelaunch/media`. A lógica de negócio continua usando `Storage::disk`, de modo que a futura adoção de S3 exige apenas configuração/adaptador, não mudança nos serviços de mídia.
+
+Antes de migrar para S3:
+
+1. Bloquear novos uploads e executar `prelaunch:media:capacity --json`.
+2. Criar e verificar um backup consistente.
+3. Copiar cada `storage_key` e `thumbnail_storage_key` preservando as chaves relativas e ACL privada.
+4. Comparar tamanho e SHA-256 do original com `pre_registration_media`; comparar miniaturas com o manifesto do backup.
+5. Executar uma reimportação completa e uma segunda execução idempotente.
+6. Trocar o driver somente após reconciliação sem divergências e manter o volume local até o fim da janela de rollback.
+
+Ao encerrar a campanha, criar o backup final, verificar a restauração e a cópia off-site, registrar retenção autorizada e somente então executar a limpeza de órfãos. A remoção definitiva do volume exige autorização operacional separada.

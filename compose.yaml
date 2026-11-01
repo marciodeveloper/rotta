@@ -23,10 +23,23 @@ services:
       SESSION_SECURE_COOKIE: "false"
       MAIL_MAILER: array
       QUEUE_CONNECTION: database
+      PRELAUNCH_MEDIA_ROOT: /var/lib/rotta-prelaunch/media
+      PRELAUNCH_BACKUP_ROOT: /var/lib/rotta-prelaunch/backups
     depends_on:
       database:
         condition: service_healthy
     networks: [rotta_prelaunch_internal]
+    volumes:
+      - type: volume
+        source: rotta_prelaunch_media
+        target: /var/lib/rotta-prelaunch/media
+        volume:
+          nocopy: true
+      - type: volume
+        source: rotta_prelaunch_backups
+        target: /var/lib/rotta-prelaunch/backups
+        volume:
+          nocopy: true
     restart: unless-stopped
 
   database:
@@ -67,3 +80,7 @@ networks:
 
 volumes:
   rotta_prelaunch_pgdata:
+  rotta_prelaunch_media:
+    external: true
+  rotta_prelaunch_backups:
+    external: true

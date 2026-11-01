@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('prelaunch:email-outbox:dispatch')->everyMinute()->withoutOverlapping();
 Schedule::command('prelaunch:media:cleanup-orphans --force --older-than=24')->daily()->withoutOverlapping();
+Schedule::command('prelaunch:media:capacity --json')->everyFiveMinutes()->withoutOverlapping();

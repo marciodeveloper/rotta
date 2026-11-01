@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class PersistPreRegistrationMedia
 {
-    public function __construct(private SafeImageProcessor $processor) {}
+    public function __construct(private SafeImageProcessor $processor, private MediaStorageCapacity $capacity) {}
 
     /** @param array<string, mixed> $data @param list<string> $storedKeys */
     public function handle(PreRegistration $registration, array $data, array &$storedKeys): void
@@ -30,32 +30,56 @@ class PersistPreRegistrationMedia
         }
 
         $totalBytes = array_sum(array_map(fn (array $item): int => $item[2]->getSize() ?: 0, $items));
-        if ($totalBytes > 50 * 1024 * 1024) {
-            throw ValidationException::withMessages(['media' => 'O total de imagens não pode exceder 50 MB.']);
+        $maximumRequestBytes = (int) config('prelaunch.media.max_image_bytes') * (int) config('prelaunch.media.max_files_per_registration');
+        if ($totalBytes > $maximumRequestBytes) {
+            throw ValidationException::withMessages(['media' => 'O total de imagens não pode exceder 40 MB.']);
+        }
+
+        if ($items === []) {
+            return;
         }
 
         $diskName = (string) config('prelaunch.media_disk');
         $disk = Storage::disk($diskName);
+        $prepared = [];
         foreach ($items as [$type, $position, $file, $alt]) {
             $processed = $this->processor->process($file);
             $mediaId = (string) Str::uuid();
             $base = "{$registration->id}/{$mediaId}";
-            $originalKey = "{$base}/original.{$processed['extension']}";
-            $thumbnailKey = "{$base}/thumbnail.{$processed['extension']}";
-            $disk->put($originalKey, $processed['bytes'], ['visibility' => 'private']);
-            $storedKeys[] = $originalKey;
-            $disk->put($thumbnailKey, $processed['thumbnail'], ['visibility' => 'private']);
-            $storedKeys[] = $thumbnailKey;
-
-            $media = new PreRegistrationMedia([
-                'pre_registration_id' => $registration->id, 'type' => $type, 'position' => $position,
-                'alt_text' => trim((string) $alt), 'checksum' => $processed['checksum'], 'mime_type' => $processed['mime'],
-                'extension' => $processed['extension'], 'size_bytes' => strlen($processed['bytes']), 'width' => $processed['width'],
-                'height' => $processed['height'], 'status' => 'pending_review', 'storage_disk' => $diskName,
-                'storage_key' => $originalKey, 'thumbnail_storage_key' => $thumbnailKey, 'rights_confirmed_at' => now(),
-            ]);
-            $media->id = $mediaId;
-            $media->save();
+            $prepared[] = [
+                'id' => $mediaId,
+                'type' => $type,
+                'position' => $position,
+                'alt' => $alt,
+                'processed' => $processed,
+                'original_key' => "{$base}/original.{$processed['extension']}",
+                'thumbnail_key' => "{$base}/thumbnail.{$processed['extension']}",
+            ];
         }
+
+        $additionalBytes = array_sum(array_map(
+            fn (array $item): int => strlen($item['processed']['bytes']) + strlen($item['processed']['thumbnail']),
+            $prepared,
+        ));
+
+        $this->capacity->store($additionalBytes, function () use ($prepared, $registration, $disk, $diskName, &$storedKeys): void {
+            foreach ($prepared as $item) {
+                $processed = $item['processed'];
+                $disk->put($item['original_key'], $processed['bytes'], ['visibility' => 'private']);
+                $storedKeys[] = $item['original_key'];
+                $disk->put($item['thumbnail_key'], $processed['thumbnail'], ['visibility' => 'private']);
+                $storedKeys[] = $item['thumbnail_key'];
+
+                $media = new PreRegistrationMedia([
+                    'pre_registration_id' => $registration->id, 'type' => $item['type'], 'position' => $item['position'],
+                    'alt_text' => trim((string) $item['alt']), 'checksum' => $processed['checksum'], 'mime_type' => $processed['mime'],
+                    'extension' => $processed['extension'], 'size_bytes' => strlen($processed['bytes']), 'width' => $processed['width'],
+                    'height' => $processed['height'], 'status' => 'pending_review', 'storage_disk' => $diskName,
+                    'storage_key' => $item['original_key'], 'thumbnail_storage_key' => $item['thumbnail_key'], 'rights_confirmed_at' => now(),
+                ]);
+                $media->id = $item['id'];
+                $media->save();
+            }
+        });
     }
 }
