@@ -81,4 +81,50 @@ class BackupCommandsTest extends TestCase
             File::deleteDirectory($root);
         }
     }
+
+    public function test_encrypts_authenticates_and_decrypts_a_backup_batch(): void
+    {
+        $root = storage_path('framework/testing/backup-encryption-'.Str::uuid());
+        $batch = "{$root}/synthetic-batch";
+        $archive = "{$root}/synthetic.rottabackup";
+        $key = "{$root}/recovery.key";
+        $restore = "{$root}/restore";
+        File::ensureDirectoryExists($batch, 0700);
+        File::put("{$batch}/synthetic.txt", 'synthetic restore evidence');
+        File::put($key, sodium_bin2base64(random_bytes(32), SODIUM_BASE64_VARIANT_ORIGINAL));
+        chmod($key, 0600);
+
+        try {
+            $this->assertSame(0, Artisan::call('prelaunch:backup:encrypt', ['batch' => $batch, '--output' => $archive, '--key-file' => $key]));
+            $this->assertFileExists($archive);
+            $this->assertFileExists($archive.'.sha256');
+            $this->assertSame(0, Artisan::call('prelaunch:backup:decrypt', ['archive' => $archive, '--output' => $restore, '--key-file' => $key]));
+            $this->assertSame('synthetic restore evidence', File::get("{$restore}/synthetic-batch/synthetic.txt"));
+        } finally {
+            File::deleteDirectory($root);
+        }
+    }
+
+    public function test_decryption_rejects_a_tampered_encrypted_archive(): void
+    {
+        $root = storage_path('framework/testing/backup-tamper-'.Str::uuid());
+        $batch = "{$root}/synthetic-batch";
+        $archive = "{$root}/synthetic.rottabackup";
+        $key = "{$root}/recovery.key";
+        File::ensureDirectoryExists($batch, 0700);
+        File::put("{$batch}/synthetic.txt", 'synthetic');
+        File::put($key, sodium_bin2base64(random_bytes(32), SODIUM_BASE64_VARIANT_ORIGINAL));
+        chmod($key, 0600);
+
+        try {
+            $this->assertSame(0, Artisan::call('prelaunch:backup:encrypt', ['batch' => $batch, '--output' => $archive, '--key-file' => $key]));
+            $bytes = File::get($archive);
+            $offset = intdiv(strlen($bytes), 2);
+            $bytes[$offset] = chr(ord($bytes[$offset]) ^ 1);
+            File::put($archive, $bytes);
+            $this->assertSame(1, Artisan::call('prelaunch:backup:decrypt', ['archive' => $archive, '--output' => "{$root}/restore", '--key-file' => $key]));
+        } finally {
+            File::deleteDirectory($root);
+        }
+    }
 }

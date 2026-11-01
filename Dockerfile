@@ -9,7 +9,7 @@ RUN npm run build
 FROM php:8.3-fpm-alpine AS php-base
 RUN apk add --no-cache icu-dev libpq-dev libzip-dev oniguruma-dev libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev postgresql-client \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install bcmath exif gd intl mbstring opcache pdo_pgsql zip \
+    && docker-php-ext-install bcmath exif gd intl mbstring opcache pcntl pdo_pgsql zip \
     && addgroup -g 10001 -S rotta \
     && adduser -u 10001 -S -D -G rotta rotta
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -37,3 +37,9 @@ RUN touch .env && chown rotta:rotta .env && chmod 400 .env \
 USER rotta
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD ["php-fpm", "-t"]
 CMD ["php-fpm", "--nodaemonize"]
+
+FROM nginx:1.28-alpine AS web
+COPY deploy/nginx/container.conf /etc/nginx/conf.d/default.conf
+COPY public /app/public
+COPY --from=assets /app/public/build /app/public/build
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/ready"]

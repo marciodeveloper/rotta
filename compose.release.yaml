@@ -1,0 +1,146 @@
+name: rotta-prelaunch-release
+
+x-app: &app
+  image: rotta-prelaunch-app:release
+  environment: &environment
+    APP_NAME: ROTTA
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_KEY: ${APP_KEY:?APP_KEY is required}
+    APP_URL: https://rotta.serradev.com
+    LOG_CHANNEL: stderr
+    LOG_LEVEL: warning
+    PRELAUNCH_DATA_PEPPER: ${PRELAUNCH_DATA_PEPPER:?PRELAUNCH_DATA_PEPPER is required}
+    DB_CONNECTION: pgsql
+    DB_HOST: database
+    DB_PORT: 5432
+    DB_DATABASE: rotta_prelaunch
+    DB_USERNAME: rotta_prelaunch
+    DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    CACHE_STORE: database
+    SESSION_DRIVER: database
+    SESSION_ENCRYPT: "true"
+    SESSION_SECURE_COOKIE: "true"
+    QUEUE_CONNECTION: database
+    MAIL_MAILER: ${MAIL_MAILER:-array}
+    MAIL_HOST: ${MAIL_HOST:-127.0.0.1}
+    MAIL_PORT: ${MAIL_PORT:-2525}
+    MAIL_USERNAME: ${MAIL_USERNAME:-}
+    MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@example.test}
+    MAIL_FROM_NAME: ${MAIL_FROM_NAME:-ROTTA}
+    TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+    TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+    TURNSTILE_EXPECTED_HOSTNAME: rotta.serradev.com
+    TURNSTILE_EXPECTED_ACTION: pre_registration
+    PRIVACY_CONTROLLER_NAME: ${PRIVACY_CONTROLLER_NAME:-ROTTA — controlador a confirmar}
+    PRIVACY_CONTACT_EMAIL: ${PRIVACY_CONTACT_EMAIL:-privacidade@example.test}
+    PRELAUNCH_MEDIA_DISK: prelaunch_media
+    PRELAUNCH_MEDIA_DRIVER: local
+    PRELAUNCH_MEDIA_ROOT: /var/lib/rotta-prelaunch/media
+    PRELAUNCH_BACKUP_ROOT: /var/lib/rotta-prelaunch/backups
+    PRELAUNCH_MEDIA_MAX_IMAGE_BYTES: 5242880
+    PRELAUNCH_MEDIA_MAX_FILES: 8
+    PRELAUNCH_MEDIA_GLOBAL_QUOTA_BYTES: 5368709120
+    PRELAUNCH_MEDIA_ALERT_PERCENT: 70
+    PRELAUNCH_MEDIA_BLOCK_PERCENT: 80
+    PRELAUNCH_MEDIA_MINIMUM_FREE_BYTES: 21474836480
+  depends_on:
+    database:
+      condition: service_healthy
+  networks: [frontend, backend]
+  volumes:
+    - type: volume
+      source: media
+      target: /var/lib/rotta-prelaunch/media
+      volume:
+        nocopy: true
+    - type: volume
+      source: backups
+      target: /var/lib/rotta-prelaunch/backups
+      volume:
+        nocopy: true
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "5"
+
+services:
+  app:
+    <<: *app
+    build:
+      context: .
+      target: production
+
+  worker:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=5", "--backoff=10,30,120", "--max-time=3600"]
+    healthcheck:
+      test: ["CMD", "php", "artisan", "about", "--only=environment"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  scheduler:
+    <<: *app
+    command: ["php", "artisan", "schedule:work"]
+    healthcheck:
+      test: ["CMD", "php", "artisan", "about", "--only=environment"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  web:
+    image: rotta-prelaunch-web:release
+    build:
+      context: .
+      target: web
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18970:8080"
+    networks: [frontend]
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: rotta_prelaunch
+      POSTGRES_USER: rotta_prelaunch
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rotta_prelaunch -d rotta_prelaunch"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [backend]
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+networks:
+  frontend:
+  backend:
+    internal: true
+
+volumes:
+  pgdata:
+  media:
+    external: true
+    name: rotta_prelaunch_media
+  backups:
+    external: true
+    name: rotta_prelaunch_backups

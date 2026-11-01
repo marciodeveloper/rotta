@@ -9,9 +9,18 @@ use App\Http\Controllers\Admin\StatusController;
 use App\Http\Controllers\CepController;
 use App\Http\Controllers\EmailConfirmationController;
 use App\Http\Controllers\PreRegistrationController;
+use App\Http\Controllers\ReadinessController;
 use App\Http\Controllers\ResendConfirmationController;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+Route::get('/ready', ReadinessController::class)
+    ->withoutMiddleware([EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class])
+    ->name('readiness');
 Route::get('/', [PreRegistrationController::class, 'create'])->name('pre-registration.create');
 Route::post('/pre-cadastro', [PreRegistrationController::class, 'store'])->middleware('throttle:pre-registration')->name('pre-registration.store');
 Route::post('/pre-cadastro/reenviar-confirmacao', ResendConfirmationController::class)->middleware('throttle:confirmation-resend')->name('pre-registration.resend');
