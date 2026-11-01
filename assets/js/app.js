@@ -107,6 +107,21 @@ function initHeroCarousel() {
   const pagination = $('#heroPagination');
   if (!root || layers.length < 2 || !heroSlides.length) return;
 
+  // Each sharp portrait has a full-width, softly blurred copy behind it.
+  // Reuse the two carousel layers so the backdrop crossfades with the photo.
+  const backdrops = layers.map(layer => {
+    const backdrop = document.createElement('img');
+    backdrop.className = 'hero-backdrop';
+    backdrop.alt = '';
+    backdrop.setAttribute('aria-hidden', 'true');
+    backdrop.draggable = false;
+    backdrop.dataset.fallback = layer.dataset.fallback || '';
+    backdrop.src = layer.getAttribute('src') || '';
+    layer.before(backdrop);
+    return backdrop;
+  });
+  backdrops[0].classList.add('is-active');
+
   let currentIndex = 0;
   let activeLayer = layers[0];
 
@@ -132,7 +147,11 @@ function initHeroCarousel() {
     if (index === currentIndex) return;
     const slide = heroSlides[index];
     const nextLayer = activeLayer === layers[0] ? layers[1] : layers[0];
+    const nextBackdrop = backdrops[layers.indexOf(nextLayer)];
+    const previousBackdrop = backdrops[layers.indexOf(activeLayer)];
     const activate = () => {
+      nextBackdrop.classList.add('is-active');
+      previousBackdrop.classList.remove('is-active');
       nextLayer.classList.add('is-active');
       nextLayer.removeAttribute('aria-hidden');
       activeLayer.classList.remove('is-active');
@@ -146,6 +165,9 @@ function initHeroCarousel() {
     nextLayer.dataset.framing = slide.framing || 'landscape';
     nextLayer.dataset.fallback = slide.fallback || '';
     nextLayer.dataset.fallbackApplied = 'false';
+    nextBackdrop.dataset.fallback = slide.fallback || '';
+    nextBackdrop.dataset.fallbackApplied = 'false';
+    nextBackdrop.src = slide.image;
     nextLayer.alt = slide.alt;
     nextLayer.removeAttribute('aria-hidden');
     if (nextLayer.getAttribute('src') === slide.image && nextLayer.complete && nextLayer.naturalWidth > 0) {
