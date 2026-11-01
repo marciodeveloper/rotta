@@ -119,7 +119,7 @@ function initHeroCarousel() {
     if (statement) statement.textContent = slide.statement;
     if (caption) caption.textContent = slide.caption;
     if (pagination) {
-      $('[data-hero-slide]', pagination).forEach(button => {
+      Array.from(pagination.querySelectorAll('[data-hero-slide]')).forEach(button => {
         const active = Number(button.dataset.heroSlide) === index;
         button.classList.toggle('is-active', active);
         if (active) button.setAttribute('aria-current', 'true');
