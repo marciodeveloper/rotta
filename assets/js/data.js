@@ -11,29 +11,36 @@ export const heroSlides = [
     image: localPhoto("vassouras-igreja-praca.webp"),
     fallback: image("photo-1724161438805-dc1d37cddb35", 2400),
     alt: "Igreja histórica e praça de Vassouras",
-    statement: "Há lugares onde o tempo deixa marcas bonitas.",
-    caption: "Vassouras · patrimônio e memória."
+    statement: "Cada lugar guarda uma memória que merece continuar viva.",
+    caption: "Histórias · Vassouras e o Vale do Café."
   },
   {
-    image: localPhoto("miguel-pereira-maria-fumaca.webp"),
-    fallback: image("photo-1519681393784-d120267933ba", 2400),
-    alt: "Locomotiva a vapor histórica em Miguel Pereira",
-    statement: "Toda viagem começa com uma boa história.",
-    caption: "Miguel Pereira · memória ferroviária."
-  },
-  {
-    image: localPhoto("miguel-pereira-praca-noturna.webp"),
+    image: localPhoto("miguel-pereira-rua-do-aroma.webp"),
     fallback: image("photo-1519608487953-e999c86e7455", 2400),
-    alt: "Praça iluminada e igreja em Miguel Pereira à noite",
-    statement: "Quando a cidade acende, novas lembranças começam.",
-    caption: "Miguel Pereira · encontros e experiências."
+    alt: "Placa da Rua do Aroma em Miguel Pereira",
+    statement: "Por trás de cada endereço, existe gente fazendo acontecer.",
+    caption: "Negócios · Quem movimenta a região."
+  },
+  {
+    image: localPhoto("miguel-pereira-trex-restaurant.webp"),
+    fallback: image("photo-1517248135467-4c7edcad34c4", 2400),
+    alt: "Entrada temática do T-Rex Restaurant em Miguel Pereira",
+    statement: "Produtos, sabores e serviços com identidade local.",
+    caption: "Marketplace · O melhor da região, mais perto."
   },
   {
     image: localPhoto("vassouras-rua-entardecer.webp"),
     fallback: image("photo-1500530855697-b586d89ba3ee", 2400),
     alt: "Rua histórica de Vassouras banhada pela luz do entardecer",
-    statement: "Às vezes, o melhor caminho é desacelerar.",
-    caption: "Vassouras · paisagens e contemplação."
+    statement: "Novos caminhos começam com uma boa descoberta.",
+    caption: "Descobertas · Lugares para viver de perto."
+  },
+  {
+    image: localPhoto("vassouras-ponte-historica.webp"),
+    fallback: image("photo-1470770841072-f978cf4d019e", 2400),
+    alt: "Ponte histórica em Vassouras",
+    statement: "Conexões que aproximam pessoas, ideias e possibilidades.",
+    caption: "Oportunidades · Uma região em movimento."
   }
 ];
 
@@ -78,21 +85,54 @@ export const destinations = [
 
 export const regionalHighlights = [
   {
+    id: "vassouras-portal",
+    title: "Portal histórico",
+    category: "Patrimônio & memória",
+    description: "Uma entrada para ruas, fachadas e histórias que atravessam gerações no Vale do Café.",
+    location: "Vassouras · RJ",
+    image: localPhoto("vassouras-portal-historico.webp"),
+    fallback: image("photo-1762995875767-9b67bef64f05", 1000),
+    alt: "Portal histórico de Vassouras entre árvores e vegetação",
+    credit: "Fotografia autoral · Acervo ROTTA"
+  },
+  {
+    id: "vassouras-casario",
+    title: "Casario colonial",
+    category: "Arquitetura & memória",
+    description: "Detalhes arquitetônicos que preservam a identidade e a atmosfera da cidade.",
+    location: "Vassouras · RJ",
+    image: localPhoto("vassouras-casario-colonial.webp"),
+    fallback: image("photo-1762995875767-9b67bef64f05", 1000),
+    alt: "Fachada de casario colonial em Vassouras",
+    credit: "Fotografia autoral · Acervo ROTTA"
+  },
+  {
+    id: "vassouras-igreja",
+    title: "Igreja e praça",
+    category: "Cultura & identidade",
+    description: "Um cenário de encontros e patrimônio no coração de Vassouras.",
+    location: "Vassouras · RJ",
+    image: localPhoto("vassouras-igreja-praca.webp"),
+    fallback: image("photo-1724161438805-dc1d37cddb35", 1000),
+    alt: "Igreja histórica e praça de Vassouras",
+    credit: "Fotografia autoral · Acervo ROTTA"
+  },
+  {
     id: "maria-fumaca",
     title: "Maria-fumaça",
     category: "Memória ferroviária",
-    description: "Uma imagem que já conta uma história: o vapor, os trilhos e a memória de viajar sem pressa.",
+    description: "O vapor, os trilhos e a memória de viajar sem pressa fazem parte da experiência da cidade.",
     location: "Miguel Pereira · RJ",
     image: localPhoto("miguel-pereira-maria-fumaca.webp"),
     fallback: image("photo-1500530855697-b586d89ba3ee", 1000),
-    alt: "Locomotiva a vapor histórica fotografada em Miguel Pereira",
+    alt: "Locomotiva a vapor histórica em Miguel Pereira",
     credit: "Fotografia autoral · Acervo ROTTA"
   },
   {
     id: "rua-do-aroma",
     title: "Rua do Aroma",
     category: "Passeio & identidade",
-    description: "Um endereço que convida a caminhar, observar os detalhes e descobrir a atmosfera da cidade.",
+    description: "Um endereço que convida a caminhar, observar os detalhes e descobrir a atmosfera local.",
     location: "Miguel Pereira · RJ",
     image: localPhoto("miguel-pereira-rua-do-aroma.webp"),
     fallback: image("photo-1519608487953-e999c86e7455", 1000),
@@ -102,7 +142,7 @@ export const regionalHighlights = [
   {
     id: "trex-restaurant",
     title: "T-Rex Restaurant",
-    category: "Gastronomia & diversão",
+    category: "Gastronomia & lazer",
     description: "Um ponto temático que transforma uma parada para comer em parte da experiência.",
     location: "Miguel Pereira · RJ",
     image: localPhoto("miguel-pereira-trex-restaurant.webp"),
@@ -273,22 +313,32 @@ export const opportunities = [
 export const stories = [
   {
     id: "memoria-nas-ruas",
-    title: "A memória que mora nas ruas",
+    title: "A cidade refletida em suas memórias",
     category: "Cultura & patrimônio",
-    description: "Uma caminhada por fachadas, praças e encontros que mantêm viva a identidade de Vassouras.",
-    image: localPhoto("vassouras-casario-colonial.webp"),
+    description: "Uma pausa para observar fachadas, luzes e reflexos que mantêm viva a identidade de Vassouras.",
+    image: localPhoto("vassouras-reflexos-por-do-sol.webp"),
     fallback: image("photo-1762995875767-9b67bef64f05", 1400),
-    alt: "Fachada histórica em Vassouras",
+    alt: "Reflexos do entardecer em Vassouras",
     protected: true
   },
   {
-    id: "memoria-nos-trilhos",
-    title: "O tempo que ainda passa pelos trilhos",
-    category: "Memória & experiência",
-    description: "A Maria-fumaça transforma patrimônio ferroviário em convite para conhecer Miguel Pereira.",
-    image: localPhoto("miguel-pereira-maria-fumaca.webp"),
-    fallback: image("photo-1500530855697-b586d89ba3ee", 1400),
-    alt: "Locomotiva a vapor em Miguel Pereira",
+    id: "conexoes-que-aproximam",
+    title: "Pequenos lugares, grandes encontros",
+    category: "Identidade & conexão",
+    description: "Detalhes urbanos que revelam como uma cidade se transforma em ponto de encontro.",
+    image: localPhoto("miguel-pereira-cabine-telefonica.webp"),
+    fallback: image("photo-1519608487953-e999c86e7455", 1400),
+    alt: "Cabine telefônica vermelha na Rua do Aroma em Miguel Pereira",
+    protected: true
+  },
+  {
+    id: "caminhos-que-ligam",
+    title: "Caminhos que ligam histórias",
+    category: "Patrimônio & território",
+    description: "Pontes, trilhos e caminhos conectam paisagens, lembranças e novas possibilidades.",
+    image: localPhoto("vassouras-ponte-historica.webp"),
+    fallback: image("photo-1470770841072-f978cf4d019e", 1400),
+    alt: "Ponte histórica em Vassouras",
     protected: true
   }
 ];

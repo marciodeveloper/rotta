@@ -1,14 +1,24 @@
-# Fotografias regionais ROTTA
+# ROTTA — Fotografias regionais autorais
 
-Copie os arquivos WebP do pacote `ROTTA-fotografias-regionais.zip` para esta pasta.
+Esta pasta recebe as 11 versões WebP otimizadas do acervo regional. Extraia o pacote de fotografias na raiz do repositório, preservando a estrutura `assets/photos/`.
 
-Os arquivos são versões otimizadas das fotografias fornecidas para o projeto. As imagens originais em alta resolução não devem ser publicadas aqui.
+## Vassouras
+- `vassouras-portal-historico.webp`
+- `vassouras-casario-colonial.webp`
+- `vassouras-ponte-historica.webp`
+- `vassouras-reflexos-por-do-sol.webp`
+- `vassouras-igreja-praca.webp`
+- `vassouras-rua-entardecer.webp`
 
-Crédito na interface: **Fotografia autoral · Acervo ROTTA**. O crédito nominal do fotógrafo poderá ser acrescentado quando o nome e a forma de atribuição forem confirmados.
+## Miguel Pereira
+- `miguel-pereira-maria-fumaca.webp`
+- `miguel-pereira-praca-noturna.webp`
+- `miguel-pereira-rua-do-aroma.webp`
+- `miguel-pereira-trex-restaurant.webp`
+- `miguel-pereira-cabine-telefonica.webp`
 
-A proteção de interface desestimula salvamento casual, mas não impede captura de tela ou obtenção do arquivo por inspeção técnica.
+## Crédito e preservação
+Fotografias de autoria do sócio do projeto, fornecidas para uso na ROTTA.
+Crédito provisório na interface: **Fotografia autoral · Acervo ROTTA**.
 
-## Arquivos incluídos
-
-- Vassouras: portal histórico, casarão colonial, ponte histórica, igreja/praça, reflexos e rua ao entardecer.
-- Miguel Pereira: Maria-fumaça, praça noturna, Rua do Aroma, T-Rex Restaurant e cabine telefônica.
+Os originais em alta resolução permanecem fora do repositório público. A proteção de interface desestimula cópia casual, mas não impede capturas de tela ou obtenção técnica dos arquivos.

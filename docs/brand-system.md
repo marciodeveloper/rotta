@@ -30,6 +30,15 @@ A ROTTA é concebida como um ecossistema híbrido de descoberta, conteúdo audio
 - Fotografia documental e humana, com aparência natural e sem filtros excessivamente artificiais.
 - O audiovisual aparece como experiência e narrativa, não como protagonista técnico.
 
+## Grafismo territorial
+
+O elemento gráfico proprietário da ROTTA é cartográfico: linhas de percurso, pontos de parada, conexões e contornos topográficos sutis. Ele representa pessoas, negócios, histórias e destinos conectados por caminhos reais.
+
+- Priorizar rotas orgânicas, waypoints e interseções em vez de órbitas circulares genéricas.
+- Usar cobre para o percurso principal e marfim em baixa opacidade para linhas secundárias.
+- A animação deve sugerir deslocamento e descoberta, sem competir com fotografia ou conteúdo.
+- Respeitar `prefers-reduced-motion` e manter o grafismo como apoio, nunca como protagonista.
+
 ## Ícones
 - Traço linear, consistente, sem preenchimentos pesados.
 - Cobre sobre grafite/verde e grafite sobre superfícies claras.

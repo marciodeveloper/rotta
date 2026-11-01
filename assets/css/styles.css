@@ -734,3 +734,41 @@ svg { display: block; }
   right: 17px;
   bottom: auto;
 }
+
+
+/* ROTTA — cartographic route system and safe logo lockup */
+.site-header .brand { width:232px; flex:0 0 232px; min-width:0; overflow:visible; }
+.site-header .brand img { display:block; width:100%; height:auto; max-width:100%; object-fit:contain; overflow:visible; }
+.route-map { position:absolute; inset:0; display:grid; place-items:center; width:min(430px,112%); aspect-ratio:1.21; margin:auto; opacity:.96; pointer-events:none; }
+.route-map svg { width:100%; height:100%; overflow:visible; }
+.route-map .map-contours path { fill:none; stroke:rgba(242,238,228,.13); stroke-width:1; stroke-linecap:round; }
+.route-map .route-line { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.route-map .route-line-secondary { stroke:rgba(242,238,228,.28); stroke-width:1; stroke-dasharray:2 9; }
+.route-map .route-line-primary { stroke:rgba(223,163,91,.78); stroke-width:1.45; stroke-dasharray:5 9; animation:routeFlow 26s linear infinite; }
+.route-map .route-line-lower { animation-direction:reverse; animation-duration:32s; }
+.route-map .route-node { fill:#17231d; stroke:var(--copper-bright); stroke-width:1.5; }
+.route-map .route-node-core { fill:var(--copper-bright); }
+.route-map .route-node-pulse { fill:none; stroke:rgba(223,163,91,.62); stroke-width:1; transform-box:fill-box; transform-origin:center; animation:routePulse 3.8s ease-in-out infinite; }
+.route-map .route-stop-delay .route-node-pulse { animation-delay:1.1s; }
+.route-map .route-stop-delay-late .route-node-pulse { animation-delay:2.1s; }
+@keyframes routeFlow { to { stroke-dashoffset:-220; } }
+@keyframes routePulse { 0%,100% { opacity:.24; transform:scale(.82); } 50% { opacity:.92; transform:scale(1.32); } }
+.region-feature-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.region-feature-card:last-child { grid-column:auto; }
+.region-feature-card:last-child .region-feature-media { height:280px; }
+.story-image-wrap .photo-credit { right:22px; bottom:22px; }
+@media (max-width:1120px) { .site-header .brand { width:205px; flex-basis:205px; } }
+@media (max-width:900px) {
+  .site-header .brand { width:194px; flex-basis:194px; }
+  .route-map { width:100%; }
+  .region-feature-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .region-feature-card:last-child { grid-column:auto; }
+}
+@media (max-width:600px) {
+  .site-header .brand { width:164px; flex-basis:164px; }
+  .region-feature-grid { grid-template-columns:1fr; }
+  .region-feature-card:last-child .region-feature-media { height:265px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .route-map .route-line-primary,.route-map .route-node-pulse { animation:none !important; }
+}

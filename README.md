@@ -56,6 +56,6 @@ Não existe backend, login real, envio de formulário, contato WhatsApp, reserva
 
 ## Fotografias regionais e proteção
 
-As fotografias autorais otimizadas ficam em `assets/photos/`. O pacote de assets da rodada regional contém os arquivos WebP usados pela hero, destinos e destaques de Miguel Pereira. Copie o conteúdo do pacote para essa pasta antes de remover os fallbacks ilustrativos.
+As fotografias autorais otimizadas ficam em `assets/photos/`. O pacote regional ROTTA contém 11 arquivos WebP e deve ser extraído na raiz do repositório, preservando a estrutura `assets/photos/`, antes da validação visual da branch.
 
 A interface dificulta o salvamento casual por menu de contexto, arraste e seleção sobre as imagens. Isso não impede captura de tela, inspeção de rede ou download técnico: todo arquivo publicado em um site público pode ser recuperado. Por isso, publique somente versões otimizadas e mantenha os originais fora do repositório.
