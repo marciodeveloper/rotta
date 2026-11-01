@@ -728,3 +728,9 @@ svg { display: block; }
   }
   .hero-pagination button { transition: none !important; }
 }
+
+.destination-card > .destination-photo-credit {
+  top: 52px;
+  right: 17px;
+  bottom: auto;
+}
