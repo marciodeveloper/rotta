@@ -11,13 +11,25 @@ As imagens remotas desta primeira versão usam URLs do Unsplash e são apresenta
 
 A interface usa imagens de demonstração. Substituir por fotografias próprias e autorizadas da ROTTA antes do lançamento comercial.
 
-
 ## Fotografias autorais — acervo ROTTA
 
-As fotografias abaixo foram fornecidas pelo usuário e são de autoria de seu sócio. Os arquivos web otimizados serão mantidos em `assets/photos/`; as versões originais devem permanecer preservadas fora do repositório público.
+As fotografias foram produzidas pelo sócio do projeto e fornecidas para uso na ROTTA. O pacote regional reúne 11 versões WebP otimizadas, organizadas em `assets/photos/`.
 
-- Vassouras — portal histórico, casarão colonial, ponte histórica, praça/igreja e reflexos ao entardecer.
-- Miguel Pereira — locomotiva a vapor, praça iluminada, placa da Rua do Aroma, T-Rex Restaurant e cabine telefônica vermelha.
-- Crédito exibido na interface: **Fotografia autoral · Acervo ROTTA**. Inserir o nome do fotógrafo quando autorizado e informado.
+**Vassouras**
+- `vassouras-portal-historico.webp`
+- `vassouras-casario-colonial.webp`
+- `vassouras-ponte-historica.webp`
+- `vassouras-reflexos-por-do-sol.webp`
+- `vassouras-igreja-praca.webp`
+- `vassouras-rua-entardecer.webp`
 
-As medidas de interface (bloqueio de menu de contexto, arraste e seleção sobre as fotografias) são apenas barreiras contra cópia casual. Como os arquivos são servidos por um site público, não impedem captura de tela, inspeção de rede ou obtenção do recurso original. Publicar somente versões otimizadas, sem os arquivos originais em alta resolução.
+**Miguel Pereira**
+- `miguel-pereira-maria-fumaca.webp`
+- `miguel-pereira-praca-noturna.webp`
+- `miguel-pereira-rua-do-aroma.webp`
+- `miguel-pereira-trex-restaurant.webp`
+- `miguel-pereira-cabine-telefonica.webp`
+
+Crédito exibido na interface: **Fotografia autoral · Acervo ROTTA**. O crédito nominal poderá ser acrescentado quando confirmado e autorizado.
+
+Os originais em alta resolução devem permanecer fora do repositório público. A proteção de interface desestimula cópia casual, mas não impede capturas de tela, inspeção de rede ou obtenção técnica dos arquivos. Publicar somente as versões otimizadas.

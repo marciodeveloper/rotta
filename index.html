@@ -70,36 +70,65 @@
 
   <main id="conteudo">
     <section class="hero" aria-labelledby="heroTitle">
-      <div class="hero-media" data-protected-media aria-label="Fotografias autorais de Vassouras e Miguel Pereira">
+      <div class="hero-media protected-media" data-protected-media aria-label="Fotografias autorais de Vassouras e Miguel Pereira">
         <img class="hero-image is-active" src="./assets/photos/vassouras-igreja-praca.webp" data-fallback="https://images.unsplash.com/photo-1724161438805-dc1d37cddb35?auto=format&fit=crop&w=2400&q=88" alt="Igreja histórica e praça de Vassouras" fetchpriority="high" draggable="false">
-        <img class="hero-image" src="./assets/photos/miguel-pereira-maria-fumaca.webp" data-fallback="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=2400&q=88" alt="" aria-hidden="true" draggable="false">
+        <img class="hero-image" src="./assets/photos/miguel-pereira-rua-do-aroma.webp" data-fallback="https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=2400&q=88" alt="" aria-hidden="true" draggable="false">
       </div>
       <div class="hero-shade"></div>
       <div class="hero-contour" aria-hidden="true"></div>
       <div class="hero-inner page-width">
         <div class="hero-copy">
-          <div class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> Turismo · Cultura · Negócios · Experiências</div>
+          <div class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> Histórias · Negócios · Marketplace · Descobertas · Oportunidades</div>
           <h1 id="heroTitle">Tem lugar que a gente <em>leva pra vida.</em></h1>
-          <p>De Vassouras a Miguel Pereira, descubra patrimônios, paisagens, sabores e experiências que ficam com você.</p>
+          <p>Descubra lugares, conheça negócios, encontre produtos e experiências e acompanhe oportunidades que conectam pessoas e histórias em movimento.</p>
           <div class="hero-actions">
             <a class="button button-copper" href="#destinos">Explorar descobertas <span aria-hidden="true">↗</span></a>
             <button class="button button-glass" type="button" data-open-story>Conheça a ROTTA <span aria-hidden="true">▶</span></button>
           </div>
           <div class="hero-footnote"><span class="footnote-mark"></span> Pessoas, lugares e histórias em movimento.</div>
-          <div class="hero-pagination" id="heroPagination" aria-label="Selecionar imagem de destaque">
-            <button type="button" data-hero-slide="0" aria-label="Ver Vassouras" aria-current="true"></button>
-            <button type="button" data-hero-slide="1" aria-label="Ver Maria-fumaça"></button>
-            <button type="button" data-hero-slide="2" aria-label="Ver Miguel Pereira à noite"></button>
-            <button type="button" data-hero-slide="3" aria-label="Ver paisagens de Vassouras"></button>
+          <div class="hero-pagination" id="heroPagination" aria-label="Selecionar categoria em destaque">
+            <button type="button" data-hero-slide="0" aria-label="Ver Histórias" aria-current="true"></button>
+            <button type="button" data-hero-slide="1" aria-label="Ver Negócios"></button>
+            <button type="button" data-hero-slide="2" aria-label="Ver Marketplace"></button>
+            <button type="button" data-hero-slide="3" aria-label="Ver Descobertas"></button>
+            <button type="button" data-hero-slide="4" aria-label="Ver Oportunidades"></button>
           </div>
         </div>
         <div class="hero-aside" aria-label="Manifesto ROTTA">
-          <div class="aside-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="route-map" aria-hidden="true">
+            <svg viewBox="0 0 460 380" xmlns="http://www.w3.org/2000/svg">
+              <g class="map-contours">
+                <path d="M12 265C58 222 48 169 101 144S175 132 202 88 284 33 342 48 412 87 448 52"/>
+                <path d="M4 300C62 254 67 201 121 176S193 163 223 119 294 69 350 82 416 117 456 84"/>
+                <path d="M24 337C82 293 92 242 145 216S218 202 247 158 314 108 367 122 430 153 462 126"/>
+                <path d="M38 70C87 92 106 122 147 130S221 124 253 165 308 230 363 232 416 259 448 290"/>
+              </g>
+              <path class="route-line route-line-secondary" d="M42 303C88 271 92 225 139 205S207 194 237 154 300 104 356 100 407 78 431 54"/>
+              <path class="route-line route-line-secondary" d="M57 83C104 112 130 149 177 160S248 167 279 210 334 261 394 268 424 289 440 314"/>
+              <path class="route-line route-line-primary" d="M35 293C91 260 102 213 157 198S225 183 255 143 317 92 369 91 412 65 434 39"/>
+              <path class="route-line route-line-primary route-line-lower" d="M62 91C113 125 139 158 187 174S255 187 286 226 344 279 402 286"/>
+              <g class="route-stop">
+                <circle class="route-node-pulse" cx="35" cy="293" r="11"/><circle class="route-node" cx="35" cy="293" r="5"/><circle class="route-node-core" cx="35" cy="293" r="1.8"/>
+              </g>
+              <g class="route-stop route-stop-delay">
+                <circle class="route-node-pulse" cx="157" cy="198" r="10"/><circle class="route-node" cx="157" cy="198" r="4.5"/><circle class="route-node-core" cx="157" cy="198" r="1.7"/>
+              </g>
+              <g class="route-stop route-stop-delay-late">
+                <circle class="route-node-pulse" cx="255" cy="143" r="10"/><circle class="route-node" cx="255" cy="143" r="4.5"/><circle class="route-node-core" cx="255" cy="143" r="1.7"/>
+              </g>
+              <g class="route-stop">
+                <circle class="route-node-pulse" cx="369" cy="91" r="11"/><circle class="route-node" cx="369" cy="91" r="5"/><circle class="route-node-core" cx="369" cy="91" r="1.8"/>
+              </g>
+              <g class="route-stop route-stop-delay">
+                <circle class="route-node-pulse" cx="402" cy="286" r="10"/><circle class="route-node" cx="402" cy="286" r="4.5"/><circle class="route-node-core" cx="402" cy="286" r="1.7"/>
+              </g>
+            </svg>
+          </div>
           <div class="aside-card">
-            <span class="aside-index">01 <i>/ 04</i></span>
+            <span class="aside-index">01 <i>/ 05</i></span>
             <span class="aside-rule"></span>
-            <strong>Há lugares onde o tempo deixa marcas bonitas.</strong>
-            <span class="aside-caption">Vassouras · patrimônio e memória.</span>
+            <strong>Cada lugar guarda uma memória que merece continuar viva.</strong>
+            <span class="aside-caption">Histórias · Vassouras e o Vale do Café.</span>
           </div>
           <div class="hero-coordinate">VALE DO CAFÉ <span>·</span> RJ</div>
         </div>
@@ -177,12 +206,12 @@
       <div class="page-width">
         <div class="section-heading section-heading-split">
           <div>
-            <div class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> Miguel Pereira · RJ</div>
-            <h2>Uma cidade de muitos<br><em>caminhos e encontros.</em></h2>
+            <div class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> Vassouras + Miguel Pereira · RJ</div>
+            <h2>Dois destinos.<br><em>Muitas histórias em movimento.</em></h2>
           </div>
           <div class="section-intro section-intro-light">
-            <p>Da memória da Maria-fumaça aos passeios que revelam novos ângulos da cidade. Descubra o destino no seu ritmo — de dia, ao entardecer ou quando as luzes se acendem.</p>
-            <a class="text-link text-link-light" href="#experiencias">Ver experiências <span>↗</span></a>
+            <p>Do patrimônio histórico de Vassouras à energia de Miguel Pereira. Descubra lugares, negócios e experiências que revelam o melhor de cada cidade.</p>
+            <a class="text-link text-link-light" href="#destinos">Explorar destinos <span>↗</span></a>
           </div>
         </div>
         <div class="region-feature-grid" id="regionFeatureGrid"></div>
@@ -219,9 +248,10 @@
     </section>
 
     <section class="story-section" id="historias">
-      <div class="story-image-wrap">
-        <img src="https://images.unsplash.com/photo-1708597786511-6d65ed5ffc91?auto=format&fit=crop&w=1600&q=85" alt="Duas pessoas caminhando juntas por uma trilha de montanha" loading="lazy">
+      <div class="story-image-wrap protected-media" data-protected-media>
+        <img src="./assets/photos/vassouras-reflexos-por-do-sol.webp" data-fallback="https://images.unsplash.com/photo-1708597786511-6d65ed5ffc91?auto=format&fit=crop&w=1600&q=85" alt="Reflexos do entardecer em Vassouras" loading="lazy" decoding="async" draggable="false">
         <div class="story-image-overlay"></div>
+        <span class="photo-credit">Fotografia autoral · Acervo ROTTA</span>
         <span class="story-image-label"><span class="live-dot"></span> Histórias que inspiram</span>
         <button class="story-play" type="button" data-open-story aria-label="Abrir história ROTTA"><span>▶</span></button>
       </div>
