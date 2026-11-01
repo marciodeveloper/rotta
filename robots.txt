@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://marciodeveloper.github.io/rotta/sitemap.xml
