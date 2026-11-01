@@ -24,6 +24,7 @@ class EmailConfirmationTokenFactory extends Factory
             'pre_registration_id' => PreRegistration::factory(),
             'token_hash' => hash('sha256', $token),
             'expires_at' => now()->addHour(),
+            'is_active' => true,
         ];
     }
 }

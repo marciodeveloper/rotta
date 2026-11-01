@@ -23,7 +23,7 @@ class DashboardController extends Controller
         ]);
 
         $query = PreRegistration::query()
-            ->select(['id', 'business_name', 'category', 'city', 'state', 'status', 'document_last_four', 'email_confirmed_at', 'created_at'])
+            ->select(['id', 'business_name', 'category', 'city', 'state', 'status', 'status_version', 'document_last_four', 'email_confirmed_at', 'created_at'])
             ->when($filters['status'] ?? null, fn (Builder $builder, string $status): Builder => $builder->where('status', $status))
             ->when($filters['state'] ?? null, fn (Builder $builder, string $state): Builder => $builder->where('state', strtoupper($state)))
             ->when($filters['category'] ?? null, fn (Builder $builder, string $category): Builder => $builder->where('category', $category))

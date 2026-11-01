@@ -3,6 +3,7 @@
 return [
     'data_pepper' => env('PRELAUNCH_DATA_PEPPER'),
     'confirmation_ttl_minutes' => (int) env('PRELAUNCH_CONFIRMATION_TTL', 60),
+    'admin_export_mfa_ttl_minutes' => (int) env('PRELAUNCH_ADMIN_EXPORT_MFA_TTL', 15),
     'categories' => ['Artesanato', 'Bem-estar', 'Comércio', 'Cultura', 'Educação', 'Gastronomia', 'Hospedagem', 'Serviços profissionais', 'Turismo', 'Outros'],
     'privacy' => [
         'controller_name' => env('PRIVACY_CONTROLLER_NAME', 'ROTTA — controlador a confirmar'),

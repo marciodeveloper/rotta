@@ -32,6 +32,7 @@ class MfaController extends Controller
         Auth::guard('admin')->login($admin);
         $request->session()->forget('admin_mfa_pending_id');
         $request->session()->regenerate();
+        $request->session()->put('admin_mfa_verified_at', now()->timestamp);
         AdminAuditEvent::query()->create([
             'admin_id' => $admin->id,
             'action' => 'admin.login',

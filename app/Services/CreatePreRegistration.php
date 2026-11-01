@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\EmailConfirmationToken;
 use App\Models\PreRegistration;
 use App\Models\PreRegistrationStatusHistory;
 use App\Models\PrivacyNotice;
@@ -16,12 +15,12 @@ class CreatePreRegistration
     public function __construct(
         private DocumentValidator $documentValidator,
         private SensitiveHash $sensitiveHash,
+        private IssueConfirmationEmail $issueConfirmationEmail,
     ) {}
 
     /** @param array<string, mixed> $data
-     * @return array{registration: PreRegistration, token: string}|null
      */
-    public function handle(array $data, PrivacyNotice $privacyNotice): ?array
+    public function handle(array $data, PrivacyNotice $privacyNotice): ?PreRegistration
     {
         $document = $this->documentValidator->normalize((string) $data['document']);
         $email = Str::lower(trim((string) $data['email']));
@@ -34,7 +33,7 @@ class CreatePreRegistration
         }
 
         try {
-            return DB::transaction(function () use ($data, $privacyNotice, $document, $email, $phone, $documentHash, $emailHash): array {
+            return DB::transaction(function () use ($data, $privacyNotice, $document, $email, $phone, $documentHash, $emailHash): PreRegistration {
                 $registration = PreRegistration::query()->create([
                     ...Arr::only($data, [
                         'applicant_type', 'business_name', 'category', 'short_description', 'responsible_name',
@@ -56,19 +55,14 @@ class CreatePreRegistration
                     'source' => 'prelaunch_web',
                 ]);
 
-                $plainToken = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
-                EmailConfirmationToken::query()->create([
-                    'pre_registration_id' => $registration->id,
-                    'token_hash' => hash('sha256', $plainToken),
-                    'expires_at' => now()->addMinutes((int) config('prelaunch.confirmation_ttl_minutes')),
-                ]);
                 PreRegistrationStatusHistory::query()->create([
                     'pre_registration_id' => $registration->id,
                     'from_status' => null,
                     'to_status' => PreRegistration::STATUS_PENDING_EMAIL,
                 ]);
+                $this->issueConfirmationEmail->handle($registration);
 
-                return ['registration' => $registration, 'token' => $plainToken];
+                return $registration;
             }, 3);
         } catch (UniqueConstraintViolationException) {
             return null;

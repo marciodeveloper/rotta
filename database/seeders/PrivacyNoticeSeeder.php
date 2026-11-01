@@ -19,7 +19,7 @@ class PrivacyNoticeSeeder extends Seeder
                 'purpose' => 'Receber, confirmar e avaliar manifestações de interesse de empresas e profissionais para possível inclusão futura na ROTTA.',
                 'legal_basis' => null,
                 'retention_days' => null,
-                'is_current' => true,
+                'is_current' => false,
                 'status' => 'draft',
             ],
         );

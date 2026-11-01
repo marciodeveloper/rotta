@@ -108,18 +108,18 @@
             <section class="form-step" x-show="isStep(4)" x-cloak aria-labelledby="step-4-title">
                 <div class="step-heading"><span>04 / 04</span><h3 id="step-4-title">Privacidade e envio</h3></div>
                 <div class="review-note"><strong>Antes de enviar</strong><p>Confirme os dados nas etapas anteriores. Após o envio, mandaremos um link de confirmação ao e-mail informado.</p></div>
-                <article class="privacy-card"><span>Versão {{ $privacyNotice->version }} · {{ strtoupper($privacyNotice->status) }}</span><h4>{{ $privacyNotice->title }}</h4><p>{{ $privacyNotice->content }}</p><dl><div><dt>Finalidade</dt><dd>{{ $privacyNotice->purpose }}</dd></div><div><dt>Controlador</dt><dd>{{ $privacyNotice->controller_name }}</dd></div><div><dt>Contato</dt><dd>{{ $privacyNotice->contact_email }}</dd></div><div><dt>Base legal e retenção</dt><dd>Pendentes de aprovação jurídica.</dd></div></dl></article>
+                <article class="privacy-card"><span>Versão {{ $privacyNotice->version }} · {{ strtoupper($privacyNotice->status) }}</span><h4>{{ $privacyNotice->title }}</h4><p>{{ $privacyNotice->content }}</p><dl><div><dt>Finalidade</dt><dd>{{ $privacyNotice->purpose }}</dd></div><div><dt>Controlador</dt><dd>{{ $privacyNotice->controller_name }}</dd></div><div><dt>Contato</dt><dd>{{ $privacyNotice->contact_email }}</dd></div><div><dt>Base legal e retenção</dt><dd>{{ $registrationOpen ? $privacyNotice->legal_basis.' · '.$privacyNotice->retention_days.' dias' : 'Pendentes de aprovação jurídica.' }}</dd></div></dl></article>
                 <label class="check-field"><input type="checkbox" name="privacy_accepted" value="1" required><span>Li e aceito o aviso de privacidade apresentado.</span></label>
                 <label class="check-field"><input type="checkbox" name="marketing_opt_in" value="1" {{ old('marketing_opt_in') ? 'checked' : '' }}><span>Quero receber novidades da ROTTA. <small>Opcional e desmarcado por padrão.</small></span></label>
                 @error('privacy_accepted')<p class="field-error">{{ $message }}</p>@enderror
-                @if ($turnstileSiteKey)
+                @if ($registrationOpen && $turnstileSiteKey)
                     <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}" data-theme="light"></div>
                 @else
-                    <div class="integration-pending" role="status">Turnstile ainda não configurado. O envio público permanece bloqueado até a credencial ser fornecida.</div>
+                    <div class="integration-pending" role="status">{{ $registrationOpen ? 'Turnstile ainda não configurado. O envio público permanece bloqueado até a credencial ser fornecida.' : 'O pré-cadastro permanece bloqueado até a publicação do aviso de privacidade aprovado.' }}</div>
                     <input type="hidden" name="cf-turnstile-response" value="">
                 @endif
                 @error('cf-turnstile-response')<p class="field-error">{{ $message }}</p>@enderror
-                <div class="step-actions"><button class="button button-secondary" type="button" x-on:click="previous">Voltar</button><button class="button button-primary" type="submit" x-bind:disabled="submitting" @disabled(! $turnstileSiteKey)><span x-text="submitLabel">Enviar pré-cadastro</span></button></div>
+                <div class="step-actions"><button class="button button-secondary" type="button" x-on:click="previous">Voltar</button><button class="button button-primary" type="submit" x-bind:disabled="submitting || {{ $registrationOpen && $turnstileSiteKey ? 'false' : 'true' }}" @disabled(! $registrationOpen || ! $turnstileSiteKey)><span x-text="submitLabel">Enviar pré-cadastro</span></button></div>
             </section>
         </form>
     </div>

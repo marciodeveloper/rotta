@@ -11,13 +11,13 @@ class EmailConfirmationToken extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $fillable = ['pre_registration_id', 'token_hash', 'expires_at', 'used_at'];
+    protected $fillable = ['pre_registration_id', 'token_hash', 'expires_at', 'used_at', 'is_active'];
 
     protected $hidden = ['token_hash'];
 
     protected function casts(): array
     {
-        return ['expires_at' => 'datetime', 'used_at' => 'datetime'];
+        return ['expires_at' => 'datetime', 'used_at' => 'datetime', 'is_active' => 'boolean'];
     }
 
     public function preRegistration(): BelongsTo

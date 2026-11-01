@@ -32,6 +32,7 @@ class AuthControllerTest extends TestCase
         $response = $this->withSession(['admin_mfa_pending_id' => $admin->id])->post(route('admin.mfa.store'), ['code' => $code]);
 
         $response->assertRedirect(route('admin.dashboard'));
+        $response->assertSessionHas('admin_mfa_verified_at', now()->timestamp);
         $this->assertAuthenticatedAs($admin, 'admin');
         $this->assertDatabaseHas(AdminAuditEvent::class, ['admin_id' => $admin->id, 'action' => 'admin.login']);
     }

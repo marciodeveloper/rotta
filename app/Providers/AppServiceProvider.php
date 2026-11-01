@@ -3,12 +3,15 @@
 namespace App\Providers;
 
 use App\Contracts\CepLookup;
+use App\Contracts\ConfirmationMailSender;
 use App\Contracts\TurnstileVerifier;
 use App\Services\CloudflareTurnstileVerifier;
+use App\Services\LaravelConfirmationMailSender;
 use App\Services\ViaCepLookup;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -22,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(TurnstileVerifier::class, CloudflareTurnstileVerifier::class);
         $this->app->bind(CepLookup::class, ViaCepLookup::class);
+        $this->app->bind(ConfirmationMailSender::class, LaravelConfirmationMailSender::class);
     }
 
     /**
@@ -30,9 +34,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::preventLazyLoading(! $this->app->isProduction());
+        Gate::define('export-pre-registrations', fn ($admin): bool => $admin->is_active && $admin->can_export);
 
         RateLimiter::for('pre-registration', fn (Request $request): Limit => Limit::perHour(5)->by($request->ip()));
         RateLimiter::for('confirmation', fn (Request $request): Limit => Limit::perMinute(20)->by($request->ip()));
+        RateLimiter::for('confirmation-resend', fn (Request $request): Limit => Limit::perHour(3)->by($request->ip()));
         RateLimiter::for('cep', fn (Request $request): Limit => Limit::perMinute(30)->by($request->ip()));
         RateLimiter::for('admin-login', fn (Request $request): Limit => Limit::perMinute(5)->by(
             hash('sha256', Str::lower($request->string('email')->toString()).'|'.$request->ip()),

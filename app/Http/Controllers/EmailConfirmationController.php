@@ -21,16 +21,24 @@ class EmailConfirmationController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            if ($confirmationToken === null || $confirmationToken->used_at !== null || $confirmationToken->expires_at->isPast()) {
+            if ($confirmationToken === null || ! $confirmationToken->is_active || $confirmationToken->used_at !== null || $confirmationToken->expires_at->isPast()) {
                 return false;
             }
 
             $registration = PreRegistration::query()->lockForUpdate()->findOrFail($confirmationToken->pre_registration_id);
-            $confirmationToken->update(['used_at' => now()]);
+            if ($registration->status !== PreRegistration::STATUS_PENDING_EMAIL) {
+                return false;
+            }
+
+            $confirmationToken->update(['used_at' => now(), 'is_active' => false]);
 
             if ($registration->email_confirmed_at === null) {
                 $fromStatus = $registration->status;
-                $registration->update(['email_confirmed_at' => now(), 'status' => PreRegistration::STATUS_UNDER_REVIEW]);
+                $registration->update([
+                    'email_confirmed_at' => now(),
+                    'status' => PreRegistration::STATUS_UNDER_REVIEW,
+                    'status_version' => $registration->status_version + 1,
+                ]);
                 PreRegistrationStatusHistory::query()->create([
                     'pre_registration_id' => $registration->id,
                     'from_status' => $fromStatus,

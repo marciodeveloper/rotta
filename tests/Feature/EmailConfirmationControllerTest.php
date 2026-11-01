@@ -23,7 +23,9 @@ class EmailConfirmationControllerTest extends TestCase
 
         $response->assertOk()->assertSee('E-mail confirmado.');
         $this->assertNotNull($confirmation->fresh()->used_at);
+        $this->assertFalse($confirmation->fresh()->is_active);
         $this->assertSame(PreRegistration::STATUS_UNDER_REVIEW, $registration->fresh()->status);
+        $this->assertSame(2, $registration->fresh()->status_version);
         $this->assertNotNull($registration->fresh()->email_confirmed_at);
     }
 
@@ -32,7 +34,7 @@ class EmailConfirmationControllerTest extends TestCase
         $plainToken = str_repeat('b', 43);
         $registration = PreRegistration::factory()->create();
         EmailConfirmationToken::factory()->for($registration)->create([
-            'token_hash' => hash('sha256', $plainToken), 'used_at' => now(),
+            'token_hash' => hash('sha256', $plainToken), 'used_at' => now(), 'is_active' => false,
         ]);
 
         $response = $this->get(route('pre-registration.confirm', ['token' => $plainToken]));

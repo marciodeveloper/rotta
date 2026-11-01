@@ -26,8 +26,20 @@ class PrivacyNoticeFactory extends Factory
             'purpose' => 'Receber e avaliar manifestações de interesse de empresas e profissionais.',
             'legal_basis' => null,
             'retention_days' => null,
-            'is_current' => true,
+            'is_current' => false,
             'status' => 'draft',
         ];
+    }
+
+    public function published(): static
+    {
+        return $this->state(fn (): array => [
+            'version' => fake()->unique()->numerify('2026.##'),
+            'legal_basis' => 'Base legal aprovada exclusivamente para teste sintético.',
+            'retention_days' => 365,
+            'is_current' => true,
+            'status' => 'published',
+            'published_at' => now()->subMinute(),
+        ]);
     }
 }

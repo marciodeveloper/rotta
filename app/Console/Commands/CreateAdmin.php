@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-#[Signature('prelaunch:admin:create {email : Administrative email} {--name= : Display name}')]
+#[Signature('prelaunch:admin:create {email : Administrative email} {--name= : Display name} {--can-export : Grant the sensitive CSV export permission}')]
 #[Description('Provision an administrator and print the one-time TOTP enrollment URI')]
 class CreateAdmin extends Command
 {
@@ -34,6 +34,7 @@ class CreateAdmin extends Command
             'totp_secret' => $secret,
             'totp_confirmed_at' => now(),
             'is_active' => true,
+            'can_export' => (bool) $this->option('can-export'),
         ]);
 
         $label = rawurlencode('ROTTA Admin:'.$admin->email);

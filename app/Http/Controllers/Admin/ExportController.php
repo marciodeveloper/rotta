@@ -3,73 +3,99 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ExportPreRegistrationsRequest;
 use App\Models\AdminAuditEvent;
 use App\Models\PreRegistration;
 use App\Services\SensitiveHash;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class ExportController extends Controller
 {
-    /**
-     * Handle the incoming request.
-     */
-    public function __invoke(Request $request, SensitiveHash $hash): StreamedResponse
+    public function __invoke(ExportPreRegistrationsRequest $request, SensitiveHash $hash): StreamedResponse
     {
-        $filters = $request->validate([
-            'status' => ['nullable', 'string', 'in:'.implode(',', PreRegistration::STATUSES)],
-            'state' => ['nullable', 'string', 'size:2', 'alpha'],
-            'category' => ['nullable', 'string', 'max:100'],
+        $validated = $request->validated();
+        $reason = $request->string('reason')->trim()->toString();
+        $filters = array_filter([
+            'status' => $validated['status'] ?? null,
+            'state' => isset($validated['state']) ? strtoupper($validated['state']) : null,
+            'category' => $validated['category'] ?? null,
+        ]);
+        $adminId = $request->user('admin')->id;
+        $ipHash = $hash->make((string) $request->ip());
+        $requested = AdminAuditEvent::query()->create([
+            'admin_id' => $adminId,
+            'action' => 'pre_registration.export_requested',
+            'metadata' => ['filters' => $filters, 'contract_version' => '1.1', 'reason' => $reason],
+            'ip_hash' => $ipHash,
         ]);
 
-        AdminAuditEvent::query()->create([
-            'admin_id' => $request->user('admin')->id,
-            'action' => 'pre_registration.exported',
-            'metadata' => ['filters' => $filters, 'contract_version' => '1.0'],
-            'ip_hash' => $hash->make((string) $request->ip()),
-        ]);
-
-        return response()->streamDownload(function () use ($filters): void {
+        return response()->streamDownload(function () use ($filters, $adminId, $ipHash, $requested): void {
             $stream = fopen('php://output', 'w');
             if ($stream === false) {
-                throw new \RuntimeException('Unable to open export stream.');
+                $this->auditResult($adminId, $ipHash, $requested->id, 'failed', 0);
+                throw new RuntimeException('Unable to open export stream.');
             }
 
-            fputcsv($stream, ['contract_version', 'source_id', 'applicant_type', 'document', 'business_name', 'category', 'description', 'responsible_name', 'email', 'phone', 'website', 'instagram', 'address_mode', 'postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state', 'service_area', 'status', 'email_confirmed_at', 'privacy_notice_version', 'source', 'created_at']);
+            $rowCount = 0;
+            try {
+                fputcsv($stream, [
+                    'contract_version', 'source_id', 'applicant_type', 'document_last_four', 'business_name',
+                    'category', 'responsible_name', 'email', 'phone', 'city', 'state', 'status',
+                    'email_confirmed_at', 'privacy_notice_version', 'created_at',
+                ]);
 
-            PreRegistration::query()
-                ->when($filters['status'] ?? null, fn (Builder $query, string $status): Builder => $query->where('status', $status))
-                ->when($filters['state'] ?? null, fn (Builder $query, string $state): Builder => $query->where('state', strtoupper($state)))
-                ->when($filters['category'] ?? null, fn (Builder $query, string $category): Builder => $query->where('category', $category))
-                ->orderBy('id')
-                ->lazyById(200)
-                ->each(function (PreRegistration $registration) use ($stream): void {
-                    fputcsv($stream, array_map($this->safeCsv(...), [
-                        '1.0', $registration->id, $registration->applicant_type, $registration->document,
-                        $registration->business_name, $registration->category, $registration->short_description,
-                        $registration->responsible_name, $registration->email, $registration->phone,
-                        $registration->website, $registration->instagram, $registration->address_mode,
-                        $registration->postal_code, $registration->street, $registration->street_number,
-                        $registration->complement, $registration->neighborhood, $registration->city,
-                        $registration->state, $registration->service_area, $registration->status,
-                        $registration->email_confirmed_at?->toIso8601String(), $registration->privacy_notice_version,
-                        $registration->source, $registration->created_at->toIso8601String(),
-                    ]));
-                });
+                PreRegistration::query()
+                    ->select([
+                        'id', 'applicant_type', 'document_last_four', 'business_name', 'category', 'responsible_name',
+                        'email', 'phone', 'city', 'state', 'status', 'email_confirmed_at', 'privacy_notice_version', 'created_at',
+                    ])
+                    ->when($filters['status'] ?? null, fn (Builder $query, string $status): Builder => $query->where('status', $status))
+                    ->when($filters['state'] ?? null, fn (Builder $query, string $state): Builder => $query->where('state', $state))
+                    ->when($filters['category'] ?? null, fn (Builder $query, string $category): Builder => $query->where('category', $category))
+                    ->orderBy('id')
+                    ->lazyById(200)
+                    ->each(function (PreRegistration $registration) use ($stream, &$rowCount): void {
+                        fputcsv($stream, array_map($this->safeCsv(...), [
+                            '1.1', $registration->id, $registration->applicant_type, $registration->document_last_four,
+                            $registration->business_name, $registration->category, $registration->responsible_name,
+                            $registration->email, $registration->phone, $registration->city, $registration->state,
+                            $registration->status, $registration->email_confirmed_at?->toIso8601String(),
+                            $registration->privacy_notice_version, $registration->created_at->toIso8601String(),
+                        ]));
+                        $rowCount++;
+                    });
 
-            fclose($stream);
+                $this->auditResult($adminId, $ipHash, $requested->id, 'completed', $rowCount);
+            } catch (Throwable $exception) {
+                $this->auditResult($adminId, $ipHash, $requested->id, 'failed', $rowCount);
+                throw $exception;
+            } finally {
+                fclose($stream);
+            }
         }, 'rotta-pre-cadastros-'.now()->format('Y-m-d-His').'.csv', [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'X-ROTTA-Contract-Version' => '1.0',
+            'X-ROTTA-Contract-Version' => '1.1',
             'Cache-Control' => 'no-store, private',
         ]);
     }
 
     private function safeCsv(mixed $value): string
     {
-        $value = (string) ($value ?? '');
+        $value = str_replace("\0", '', (string) ($value ?? ''));
 
-        return preg_match('/^[=+\-@]/', $value) ? "'".$value : $value;
+        return preg_match('/\A[\p{C}\p{Z}\s]*[=+\-@]/u', $value) === 1 ? "'".$value : $value;
+    }
+
+    private function auditResult(string $adminId, string $ipHash, string $requestId, string $result, int $rowCount): void
+    {
+        AdminAuditEvent::query()->create([
+            'admin_id' => $adminId,
+            'action' => 'pre_registration.export_'.$result,
+            'metadata' => ['request_id' => $requestId, 'contract_version' => '1.1', 'row_count' => $rowCount],
+            'ip_hash' => $ipHash,
+        ]);
     }
 }

@@ -26,7 +26,8 @@ class UpdatePreRegistrationStatusRequest extends FormRequest
     {
         return [
             'status' => ['required', Rule::in(PreRegistration::STATUSES)],
-            'reason' => ['nullable', 'string', 'max:500'],
+            'status_version' => ['required', 'integer', 'min:1'],
+            'reason' => [Rule::requiredIf(fn (): bool => in_array($this->string('status')->toString(), [PreRegistration::STATUS_REJECTED, PreRegistration::STATUS_ARCHIVED], true)), 'nullable', 'string', 'min:10', 'max:500'],
         ];
     }
 }

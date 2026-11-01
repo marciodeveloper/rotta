@@ -12,7 +12,7 @@ class SecurityHeadersTest extends TestCase
 
     public function test_public_page_sends_browser_security_headers(): void
     {
-        PrivacyNotice::factory()->create(['is_current' => true]);
+        PrivacyNotice::factory()->published()->create();
 
         $response = $this->get(route('pre-registration.create'));
 

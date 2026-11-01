@@ -20,15 +20,26 @@ class PreRegistration extends Model
 
     public const STATUS_REJECTED = 'rejected';
 
+    public const STATUS_ARCHIVED = 'archived';
+
     /** @var list<string> */
-    public const STATUSES = [self::STATUS_PENDING_EMAIL, self::STATUS_UNDER_REVIEW, self::STATUS_APPROVED, self::STATUS_REJECTED];
+    public const STATUSES = [self::STATUS_PENDING_EMAIL, self::STATUS_UNDER_REVIEW, self::STATUS_APPROVED, self::STATUS_REJECTED, self::STATUS_ARCHIVED];
+
+    /** @var array<string, list<string>> */
+    public const ALLOWED_TRANSITIONS = [
+        self::STATUS_PENDING_EMAIL => [],
+        self::STATUS_UNDER_REVIEW => [self::STATUS_APPROVED, self::STATUS_REJECTED, self::STATUS_ARCHIVED],
+        self::STATUS_APPROVED => [self::STATUS_ARCHIVED],
+        self::STATUS_REJECTED => [self::STATUS_UNDER_REVIEW, self::STATUS_ARCHIVED],
+        self::STATUS_ARCHIVED => [self::STATUS_UNDER_REVIEW],
+    ];
 
     protected $fillable = [
         'applicant_type', 'document', 'document_hash', 'document_last_four', 'business_name', 'category',
         'short_description', 'responsible_name', 'email', 'email_hash', 'phone', 'phone_hash', 'website',
         'instagram', 'address_mode', 'postal_code', 'street', 'street_number', 'complement', 'neighborhood',
         'city', 'state', 'service_area', 'google_place_id', 'latitude', 'longitude', 'marketing_opt_in',
-        'privacy_notice_id', 'privacy_notice_version', 'status', 'source', 'email_confirmed_at',
+        'privacy_notice_id', 'privacy_notice_version', 'status', 'status_version', 'source', 'email_confirmed_at',
     ];
 
     protected $hidden = ['document', 'document_hash', 'responsible_name', 'email', 'email_hash', 'phone', 'phone_hash', 'postal_code', 'street', 'street_number', 'complement', 'neighborhood', 'service_area', 'google_place_id'];
@@ -40,7 +51,7 @@ class PreRegistration extends Model
             'website' => 'encrypted', 'instagram' => 'encrypted', 'postal_code' => 'encrypted', 'street' => 'encrypted',
             'street_number' => 'encrypted', 'complement' => 'encrypted', 'neighborhood' => 'encrypted',
             'service_area' => 'encrypted', 'google_place_id' => 'encrypted', 'marketing_opt_in' => 'boolean',
-            'latitude' => 'decimal:7', 'longitude' => 'decimal:7', 'email_confirmed_at' => 'datetime',
+            'latitude' => 'decimal:7', 'longitude' => 'decimal:7', 'status_version' => 'integer', 'email_confirmed_at' => 'datetime',
         ];
     }
 

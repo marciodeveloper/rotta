@@ -25,6 +25,7 @@ class AdminFactory extends Factory
             'totp_secret' => 'JBSWY3DPEHPK3PXP',
             'totp_confirmed_at' => now(),
             'is_active' => true,
+            'can_export' => false,
         ];
     }
 }
