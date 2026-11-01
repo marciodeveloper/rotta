@@ -1,0 +1,19 @@
+{
+  "name": "ROTTA — Pessoas, lugares e histórias em movimento",
+  "short_name": "ROTTA",
+  "description": "Descubra destinos, experiências, negócios e histórias.",
+  "lang": "pt-BR",
+  "start_url": "/rotta/",
+  "scope": "/rotta/",
+  "display": "standalone",
+  "background_color": "#20211F",
+  "theme_color": "#10382F",
+  "icons": [
+    {
+      "src": "./assets/brand/rotta-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
