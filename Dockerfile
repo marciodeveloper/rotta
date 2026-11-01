@@ -6,9 +6,12 @@ COPY resources ./resources
 COPY vite.config.js ./
 RUN npm run build
 
-FROM php:8.3-cli-alpine AS php-base
-RUN apk add --no-cache icu-dev libpq-dev libzip-dev oniguruma-dev \
-    && docker-php-ext-install bcmath intl mbstring opcache pdo_pgsql zip
+FROM php:8.3-fpm-alpine AS php-base
+RUN apk add --no-cache icu-dev libpq-dev libzip-dev oniguruma-dev libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install bcmath exif gd intl mbstring opcache pdo_pgsql zip \
+    && addgroup -g 10001 -S rotta \
+    && adduser -u 10001 -S -D -G rotta rotta
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 
@@ -18,6 +21,9 @@ RUN composer install --no-interaction --prefer-dist --no-scripts
 COPY . .
 COPY --from=assets /app/public/build ./public/build
 RUN composer dump-autoload --optimize
+RUN touch .env && chown rotta:rotta .env && chmod 400 .env \
+    && chown -R rotta:rotta storage bootstrap/cache
+USER rotta
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
 
 FROM php-base AS production
@@ -26,4 +32,8 @@ RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts --opti
 COPY . .
 COPY --from=assets /app/public/build ./public/build
 RUN composer dump-autoload --no-dev --optimize --classmap-authoritative
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+RUN touch .env && chown rotta:rotta .env && chmod 400 .env \
+    && chown -R rotta:rotta storage bootstrap/cache
+USER rotta
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD ["php-fpm", "-t"]
+CMD ["php-fpm", "--nodaemonize"]

@@ -24,7 +24,7 @@ class ExportController extends Controller
             'category' => $validated['category'] ?? null,
         ]);
         $adminId = $request->user('admin')->id;
-        $ipHash = $hash->make((string) $request->ip());
+        $ipHash = $hash->makeFor('ip-address', (string) $request->ip());
         $requested = AdminAuditEvent::query()->create([
             'admin_id' => $adminId,
             'action' => 'pre_registration.export_requested',

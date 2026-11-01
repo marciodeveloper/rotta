@@ -31,11 +31,13 @@ class ResendConfirmationController extends Controller
 
         $documentHash = $hash->make($documents->normalize($request->string('document')->toString()));
         $emailHash = $hash->make(Str::lower($request->string('email')->trim()->toString()));
+        $documentHashV2 = $hash->makeFor('document', $documents->normalize($request->string('document')->toString()));
+        $emailHashV2 = $hash->makeFor('email', Str::lower($request->string('email')->trim()->toString()));
 
-        DB::transaction(function () use ($documentHash, $emailHash, $issueConfirmationEmail): void {
+        DB::transaction(function () use ($documentHash, $emailHash, $documentHashV2, $emailHashV2, $issueConfirmationEmail): void {
             $registration = PreRegistration::query()
-                ->where('document_hash', $documentHash)
-                ->where('email_hash', $emailHash)
+                ->where(fn ($query) => $query->where('document_hash', $documentHash)->orWhere('document_hash_v2', $documentHashV2))
+                ->where(fn ($query) => $query->where('email_hash', $emailHash)->orWhere('email_hash_v2', $emailHashV2))
                 ->where('status', PreRegistration::STATUS_PENDING_EMAIL)
                 ->whereNull('email_confirmed_at')
                 ->lockForUpdate()

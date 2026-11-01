@@ -13,7 +13,12 @@ class EmailConfirmationController extends Controller
     /**
      * Handle the incoming request.
      */
-    public function __invoke(string $token): View
+    public function show(string $token): View
+    {
+        return view('pre-registration.confirm', ['token' => $token]);
+    }
+
+    public function store(string $token): View
     {
         $confirmed = DB::transaction(function () use ($token): bool {
             $confirmationToken = EmailConfirmationToken::query()

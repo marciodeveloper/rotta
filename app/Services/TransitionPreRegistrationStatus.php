@@ -48,7 +48,7 @@ class TransitionPreRegistrationStatus
                 'target_type' => PreRegistration::class,
                 'target_id' => $locked->id,
                 'metadata' => ['from' => $fromStatus, 'to' => $targetStatus, 'status_version' => $locked->status_version],
-                'ip_hash' => $this->hash->make((string) $ipAddress),
+                'ip_hash' => $this->hash->makeFor('ip-address', (string) $ipAddress),
             ]);
 
             return $locked;

@@ -8,8 +8,10 @@ use App\Models\EmailOutboxMessage;
 use App\Models\PreRegistration;
 use App\Models\PrivacyNotice;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PreRegistrationControllerTest extends TestCase
@@ -29,8 +31,51 @@ class PreRegistrationControllerTest extends TestCase
         $registration = PreRegistration::query()->firstOrFail();
         $this->assertSame('contato@example.test', $registration->email);
         $this->assertNotSame('contato@example.test', DB::table('pre_registrations')->value('email'));
+        $this->assertNotNull($registration->document_hash_v2);
+        $this->assertNotNull($registration->email_hash_v2);
         $this->assertDatabaseHas(EmailOutboxMessage::class, ['pre_registration_id' => $registration->id, 'status' => EmailOutboxMessage::STATUS_PENDING]);
         Queue::assertPushed(DeliverConfirmationEmail::class, 1);
+    }
+
+    public function test_alphanumeric_cnpj_and_private_reencoded_media_are_persisted(): void
+    {
+        Queue::fake();
+        Storage::fake('prelaunch_media');
+        config(['prelaunch.media_disk' => 'prelaunch_media']);
+        $notice = PrivacyNotice::factory()->published()->create(['version' => '2026.01']);
+        $this->mock(TurnstileVerifier::class)->shouldReceive('verify')->once()->andReturnTrue();
+        $payload = [...$this->validPayload($notice),
+            'document' => '12.ABC.345/01DE-35',
+            'logo' => UploadedFile::fake()->image('logo.jpg', 800, 600),
+            'logo_alt' => 'Marca sintética do negócio',
+            'gallery' => [UploadedFile::fake()->image('fachada.png', 1200, 800)],
+            'gallery_alt' => ['Fachada sintética do negócio'],
+            'media_rights_confirmed' => '1',
+        ];
+
+        $this->post(route('pre-registration.store'), $payload)->assertRedirect(route('pre-registration.success'));
+
+        $registration = PreRegistration::query()->firstOrFail();
+        $this->assertSame('12ABC34501DE35', $registration->document);
+        $this->assertCount(2, $registration->media);
+        foreach ($registration->media as $media) {
+            Storage::disk('prelaunch_media')->assertExists($media->getRawOriginal('storage_key'));
+            Storage::disk('prelaunch_media')->assertExists($media->getRawOriginal('thumbnail_storage_key'));
+            $this->assertSame('pending_review', $media->status);
+        }
+    }
+
+    public function test_disguised_executable_is_rejected_as_media(): void
+    {
+        $notice = PrivacyNotice::factory()->published()->create(['version' => '2026.01']);
+        $this->mock(TurnstileVerifier::class)->shouldReceive('verify')->once()->andReturnTrue();
+        $payload = [...$this->validPayload($notice),
+            'logo' => UploadedFile::fake()->createWithContent('logo.jpg', "MZ\x00synthetic executable"),
+            'logo_alt' => 'Arquivo inválido', 'media_rights_confirmed' => '1',
+        ];
+
+        $this->post(route('pre-registration.store'), $payload)->assertInvalid('media');
+        $this->assertDatabaseCount('pre_registrations', 0);
     }
 
     public function test_duplicate_document_returns_neutral_response_without_new_record_or_email(): void

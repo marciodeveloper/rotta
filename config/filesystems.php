@@ -38,6 +38,20 @@ return [
             'report' => false,
         ],
 
+        'prelaunch_media' => [
+            'driver' => env('PRELAUNCH_MEDIA_DRIVER', 'local'),
+            'root' => storage_path('app/private/pre-registration-media'),
+            'key' => env('PRELAUNCH_MEDIA_ACCESS_KEY'),
+            'secret' => env('PRELAUNCH_MEDIA_SECRET_KEY'),
+            'region' => env('PRELAUNCH_MEDIA_REGION'),
+            'bucket' => env('PRELAUNCH_MEDIA_BUCKET'),
+            'endpoint' => env('PRELAUNCH_MEDIA_ENDPOINT'),
+            'use_path_style_endpoint' => env('PRELAUNCH_MEDIA_PATH_STYLE', false),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => true,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

@@ -6,16 +6,16 @@ class DocumentValidator
 {
     public function normalize(string $value): string
     {
-        return preg_replace('/\D+/', '', $value) ?? '';
+        return strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $value) ?? '');
     }
 
     public function isValidFor(string $type, string $value): bool
     {
-        $digits = $this->normalize($value);
+        $normalized = $this->normalize($value);
 
         return match ($type) {
-            'professional' => $this->isValidCpf($digits),
-            'company' => $this->isValidCnpj($digits),
+            'professional' => ctype_digit($normalized) && $this->isValidCpf($normalized),
+            'company' => $this->isValidCnpj($normalized),
             default => false,
         };
     }
@@ -42,7 +42,8 @@ class DocumentValidator
 
     public function isValidCnpj(string $value): bool
     {
-        if (strlen($value) !== 14 || preg_match('/^(\d)\1{13}$/', $value)) {
+        $value = $this->normalize($value);
+        if (! preg_match('/^[A-Z0-9]{12}[0-9]{2}$/', $value) || preg_match('/^(\d)\1{13}$/', $value)) {
             return false;
         }
 
@@ -50,7 +51,7 @@ class DocumentValidator
         foreach ($weights as $position => $sequence) {
             $sum = 0;
             foreach ($sequence as $index => $weight) {
-                $sum += (int) $value[$index] * $weight;
+                $sum += (ord($value[$index]) - 48) * $weight;
             }
             $remainder = $sum % 11;
             $digit = $remainder < 2 ? 0 : 11 - $remainder;

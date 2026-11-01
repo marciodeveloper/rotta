@@ -24,18 +24,23 @@ class TotpService
 
     public function verify(string $secret, string $code, ?int $timestamp = null): bool
     {
+        return $this->matchingTimeStep($secret, $code, $timestamp) !== null;
+    }
+
+    public function matchingTimeStep(string $secret, string $code, ?int $timestamp = null): ?int
+    {
         if (! preg_match('/^\d{6}$/', $code)) {
-            return false;
+            return null;
         }
 
         $counter = intdiv($timestamp ?? now()->timestamp, 30);
         for ($offset = -1; $offset <= 1; $offset++) {
             if (hash_equals($this->codeAt($secret, $counter + $offset), $code)) {
-                return true;
+                return $counter + $offset;
             }
         }
 
-        return false;
+        return null;
     }
 
     public function codeAt(string $secret, int $counter): string

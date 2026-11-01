@@ -11,7 +11,7 @@ class EmailConfirmationControllerTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_valid_token_is_consumed_and_moves_registration_to_review(): void
+    public function test_get_does_not_consume_token_and_post_moves_registration_to_review(): void
     {
         $plainToken = str_repeat('a', 43);
         $registration = PreRegistration::factory()->create();
@@ -20,6 +20,12 @@ class EmailConfirmationControllerTest extends TestCase
         ]);
 
         $response = $this->get(route('pre-registration.confirm', ['token' => $plainToken]));
+
+        $response->assertOk()->assertSee('Apenas abrir esta página não utiliza o link.');
+        $this->assertNull($confirmation->fresh()->used_at);
+        $this->assertSame(PreRegistration::STATUS_PENDING_EMAIL, $registration->fresh()->status);
+
+        $response = $this->post(route('pre-registration.confirm.store', ['token' => $plainToken]));
 
         $response->assertOk()->assertSee('E-mail confirmado.');
         $this->assertNotNull($confirmation->fresh()->used_at);
@@ -37,7 +43,7 @@ class EmailConfirmationControllerTest extends TestCase
             'token_hash' => hash('sha256', $plainToken), 'used_at' => now(), 'is_active' => false,
         ]);
 
-        $response = $this->get(route('pre-registration.confirm', ['token' => $plainToken]));
+        $response = $this->post(route('pre-registration.confirm.store', ['token' => $plainToken]));
 
         $response->assertOk()->assertSee('Não foi possível confirmar este link.');
         $this->assertSame(PreRegistration::STATUS_PENDING_EMAIL, $registration->fresh()->status);

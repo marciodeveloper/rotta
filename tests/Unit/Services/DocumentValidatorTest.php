@@ -16,7 +16,11 @@ class DocumentValidatorTest extends TestCase
             'invalid CPF digit' => ['professional', '529.982.247-24', false],
             'repeated CPF' => ['professional', '111.111.111-11', false],
             'valid CNPJ' => ['company', '11.222.333/0001-81', true],
+            'valid official alphanumeric CNPJ vector' => ['company', '12.ABC.345/01DE-35', true],
+            'valid unformatted alphanumeric CNPJ' => ['company', '12ABC34501DE35', true],
             'invalid CNPJ digit' => ['company', '11.222.333/0001-80', false],
+            'invalid alphanumeric CNPJ digit' => ['company', '12.ABC.345/01DE-34', false],
+            'letters are forbidden in CPF' => ['professional', '529.982.247-A5', false],
         ];
     }
 

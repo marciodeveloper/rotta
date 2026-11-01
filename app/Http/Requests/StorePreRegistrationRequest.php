@@ -6,6 +6,7 @@ use App\Rules\ValidBrazilianDocument;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\File;
 
 class StorePreRegistrationRequest extends FormRequest
 {
@@ -52,6 +53,15 @@ class StorePreRegistrationRequest extends FormRequest
             'privacy_notice_version' => ['required', 'string', 'max:50'],
             'cf-turnstile-response' => ['required', 'string', 'max:2048'],
             'company_website' => ['nullable', 'string', 'max:200'],
+            'logo' => ['nullable', File::types(['jpg', 'jpeg', 'png', 'webp'])->max('5mb')],
+            'logo_alt' => ['nullable', 'required_with:logo', 'string', 'max:240'],
+            'cover' => ['nullable', File::types(['jpg', 'jpeg', 'png', 'webp'])->max('8mb')],
+            'cover_alt' => ['nullable', 'required_with:cover', 'string', 'max:240'],
+            'gallery' => ['nullable', 'array', 'max:6'],
+            'gallery.*' => [File::types(['jpg', 'jpeg', 'png', 'webp'])->max('8mb')],
+            'gallery_alt' => ['nullable', 'array', 'max:6'],
+            'gallery_alt.*' => ['required', 'string', 'max:240'],
+            'media_rights_confirmed' => ['sometimes', 'accepted'],
         ];
     }
 
@@ -62,6 +72,27 @@ class StorePreRegistrationRequest extends FormRequest
             'phone.regex' => 'Informe um telefone brasileiro válido, com DDD.',
             'privacy_accepted.accepted' => 'Você precisa aceitar o aviso de privacidade para enviar.',
             'cf-turnstile-response.required' => 'Conclua a verificação de segurança.',
+            'media_rights_confirmed.accepted' => 'Confirme que possui autorização para usar as imagens enviadas.',
+            'gallery.max' => 'Envie no máximo seis fotografias.',
+            'gallery_alt.*.required' => 'Informe uma descrição alternativa para cada fotografia.',
         ];
+    }
+
+    /** @return array<callable> */
+    public function after(): array
+    {
+        return [function ($validator): void {
+            $gallery = $this->file('gallery');
+            $hasMedia = $this->hasFile('logo') || $this->hasFile('cover') || (is_array($gallery) && $gallery !== []);
+            if ($hasMedia && ! $this->boolean('media_rights_confirmed')) {
+                $validator->errors()->add('media_rights_confirmed', 'Confirme que possui autorização para usar as imagens enviadas.');
+            }
+            foreach (is_array($gallery) ? $gallery : [] as $position => $file) {
+                $alt = $this->input("gallery_alt.{$position}");
+                if (! is_string($alt) || trim($alt) === '') {
+                    $validator->errors()->add("gallery_alt.{$position}", 'Informe uma descrição alternativa para cada fotografia.');
+                }
+            }
+        }];
     }
 }

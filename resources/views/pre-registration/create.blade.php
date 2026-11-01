@@ -35,7 +35,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('pre-registration.store') }}" x-data="preRegistrationForm" x-on:submit="startSubmitting" novalidate>
+        <form method="POST" action="{{ route('pre-registration.store') }}" enctype="multipart/form-data" x-data="preRegistrationForm" x-on:submit="startSubmitting" novalidate>
             @csrf
             <input class="honeypot" type="text" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="privacy_notice_version" value="{{ $privacyNotice->version }}">
@@ -54,7 +54,7 @@
                     <label><input type="radio" name="applicant_type" value="professional" x-model="applicantType" {{ old('applicant_type') === 'professional' ? 'checked' : '' }}><span><strong>Profissional</strong><small>CPF</small></span></label>
                 </fieldset>
                 <div class="field-grid">
-                    <label class="field"><span x-text="documentLabel">CNPJ</span><input name="document" value="{{ old('document') }}" inputmode="numeric" autocomplete="off" required aria-describedby="document-help @error('document') document-error @enderror"><small id="document-help">A validação matemática não comprova titularidade.</small>@error('document')<b id="document-error">{{ $message }}</b>@enderror</label>
+                    <label class="field"><span x-text="documentLabel">CNPJ</span><input name="document" value="{{ old('document') }}" x-bind:inputmode="documentInputMode" autocomplete="off" required aria-describedby="document-help document-feedback @error('document') document-error @enderror" data-document-input><small id="document-help">Aceita CNPJ numérico ou alfanumérico. A validação matemática não comprova cadastro ativo nem titularidade.</small><small id="document-feedback" data-document-feedback aria-live="polite"></small>@error('document')<b id="document-error">{{ $message }}</b>@enderror</label>
                     <label class="field"><span>Nome comercial ou profissional</span><input name="business_name" value="{{ old('business_name') }}" maxlength="160" required>@error('business_name')<b>{{ $message }}</b>@enderror</label>
                     <label class="field"><span>Categoria</span><select name="category" required><option value="">Selecione</option>@foreach ($categories as $category)<option @selected(old('category') === $category)>{{ $category }}</option>@endforeach</select>@error('category')<b>{{ $message }}</b>@enderror</label>
                     <label class="field field-wide"><span>Descrição curta</span><textarea name="short_description" maxlength="500" rows="4" required>{{ old('short_description') }}</textarea><small>Entre 20 e 500 caracteres.</small>@error('short_description')<b>{{ $message }}</b>@enderror</label>
@@ -67,7 +67,7 @@
                 <div class="field-grid">
                     <label class="field field-wide"><span>Nome do responsável</span><input name="responsible_name" value="{{ old('responsible_name') }}" maxlength="160" autocomplete="name" required>@error('responsible_name')<b>{{ $message }}</b>@enderror</label>
                     <label class="field"><span>E-mail</span><input type="email" name="email" value="{{ old('email') }}" maxlength="254" autocomplete="email" required>@error('email')<b>{{ $message }}</b>@enderror</label>
-                    <label class="field"><span>Telefone / WhatsApp</span><input name="phone" value="{{ old('phone') }}" x-on:input="maskPhone" inputmode="tel" autocomplete="tel" placeholder="(24) 99999-9999" required>@error('phone')<b>{{ $message }}</b>@enderror</label>
+                    <label class="field"><span>Telefone / WhatsApp</span><input name="phone" value="{{ old('phone') }}" inputmode="tel" autocomplete="tel" placeholder="(24) 99999-9999" required>@error('phone')<b>{{ $message }}</b>@enderror</label>
                     <label class="field"><span>Website <i>opcional</i></span><input type="url" name="website" value="{{ old('website') }}" placeholder="https://" maxlength="500">@error('website')<b>{{ $message }}</b>@enderror</label>
                     <label class="field"><span>Instagram <i>opcional</i></span><input name="instagram" value="{{ old('instagram') }}" placeholder="@seuperfil" maxlength="31">@error('instagram')<b>{{ $message }}</b>@enderror</label>
                 </div>
@@ -108,12 +108,22 @@
             <section class="form-step" x-show="isStep(4)" x-cloak aria-labelledby="step-4-title">
                 <div class="step-heading"><span>04 / 04</span><h3 id="step-4-title">Privacidade e envio</h3></div>
                 <div class="review-note"><strong>Antes de enviar</strong><p>Confirme os dados nas etapas anteriores. Após o envio, mandaremos um link de confirmação ao e-mail informado.</p></div>
+                <fieldset class="media-uploader" data-media-uploader>
+                    <legend>Imagens do negócio <small>opcional</small></legend>
+                    <p>JPEG, PNG ou WebP. Logo até 5 MB; demais imagens até 8 MB. As imagens ficam privadas até aprovação.</p>
+                    <div class="media-slot"><label><span>Logo</span><input type="file" name="logo" accept="image/jpeg,image/png,image/webp" data-media-input="logo"></label><label class="field"><span>Descrição alternativa</span><input name="logo_alt" maxlength="240" value="{{ old('logo_alt') }}"></label><div data-media-preview="logo"></div></div>
+                    <div class="media-slot"><label><span>Foto de capa</span><input type="file" name="cover" accept="image/jpeg,image/png,image/webp" data-media-input="cover"></label><label class="field"><span>Descrição alternativa</span><input name="cover_alt" maxlength="240" value="{{ old('cover_alt') }}"></label><div data-media-preview="cover"></div></div>
+                    <div class="media-dropzone" data-gallery-dropzone tabindex="0" role="button"><strong>Fotografias</strong><span>Arraste até seis imagens ou selecione arquivos.</span><input type="file" name="gallery[]" accept="image/jpeg,image/png,image/webp" multiple data-gallery-input></div>
+                    <ol class="media-gallery" data-gallery-preview aria-live="polite"></ol>
+                    <label class="check-field"><input type="checkbox" name="media_rights_confirmed" value="1" {{ old('media_rights_confirmed') ? 'checked' : '' }}><span>Declaro possuir autorização para usar as imagens enviadas.</span></label>
+                    @foreach (['logo','logo_alt','cover','cover_alt','gallery','gallery.*','gallery_alt.*','media_rights_confirmed','media'] as $field) @error($field)<p class="field-error">{{ $message }}</p>@enderror @endforeach
+                </fieldset>
                 <article class="privacy-card"><span>Versão {{ $privacyNotice->version }} · {{ strtoupper($privacyNotice->status) }}</span><h4>{{ $privacyNotice->title }}</h4><p>{{ $privacyNotice->content }}</p><dl><div><dt>Finalidade</dt><dd>{{ $privacyNotice->purpose }}</dd></div><div><dt>Controlador</dt><dd>{{ $privacyNotice->controller_name }}</dd></div><div><dt>Contato</dt><dd>{{ $privacyNotice->contact_email }}</dd></div><div><dt>Base legal e retenção</dt><dd>{{ $registrationOpen ? $privacyNotice->legal_basis.' · '.$privacyNotice->retention_days.' dias' : 'Pendentes de aprovação jurídica.' }}</dd></div></dl></article>
                 <label class="check-field"><input type="checkbox" name="privacy_accepted" value="1" required><span>Li e aceito o aviso de privacidade apresentado.</span></label>
                 <label class="check-field"><input type="checkbox" name="marketing_opt_in" value="1" {{ old('marketing_opt_in') ? 'checked' : '' }}><span>Quero receber novidades da ROTTA. <small>Opcional e desmarcado por padrão.</small></span></label>
                 @error('privacy_accepted')<p class="field-error">{{ $message }}</p>@enderror
                 @if ($registrationOpen && $turnstileSiteKey)
-                    <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}" data-theme="light"></div>
+                    <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}" data-action="{{ config('prelaunch.turnstile.expected_action') }}" data-theme="light"></div>
                 @else
                     <div class="integration-pending" role="status">{{ $registrationOpen ? 'Turnstile ainda não configurado. O envio público permanece bloqueado até a credencial ser fornecida.' : 'O pré-cadastro permanece bloqueado até a publicação do aviso de privacidade aprovado.' }}</div>
                     <input type="hidden" name="cf-turnstile-response" value="">

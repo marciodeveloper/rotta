@@ -35,14 +35,14 @@ class PreRegistration extends Model
     ];
 
     protected $fillable = [
-        'applicant_type', 'document', 'document_hash', 'document_last_four', 'business_name', 'category',
-        'short_description', 'responsible_name', 'email', 'email_hash', 'phone', 'phone_hash', 'website',
+        'applicant_type', 'document', 'document_hash', 'document_hash_v2', 'document_last_four', 'business_name', 'category',
+        'short_description', 'responsible_name', 'email', 'email_hash', 'email_hash_v2', 'phone', 'phone_hash', 'phone_hash_v2', 'website',
         'instagram', 'address_mode', 'postal_code', 'street', 'street_number', 'complement', 'neighborhood',
         'city', 'state', 'service_area', 'google_place_id', 'latitude', 'longitude', 'marketing_opt_in',
         'privacy_notice_id', 'privacy_notice_version', 'status', 'status_version', 'source', 'email_confirmed_at',
     ];
 
-    protected $hidden = ['document', 'document_hash', 'responsible_name', 'email', 'email_hash', 'phone', 'phone_hash', 'postal_code', 'street', 'street_number', 'complement', 'neighborhood', 'service_area', 'google_place_id'];
+    protected $hidden = ['document', 'document_hash', 'document_hash_v2', 'responsible_name', 'email', 'email_hash', 'email_hash_v2', 'phone', 'phone_hash', 'phone_hash_v2', 'postal_code', 'street', 'street_number', 'complement', 'neighborhood', 'service_area', 'google_place_id'];
 
     protected function casts(): array
     {
@@ -68,5 +68,10 @@ class PreRegistration extends Model
     public function statusHistory(): HasMany
     {
         return $this->hasMany(PreRegistrationStatusHistory::class);
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(PreRegistrationMedia::class)->orderBy('type')->orderBy('position');
     }
 }

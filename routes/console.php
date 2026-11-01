@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('prelaunch:email-outbox:dispatch')->everyMinute()->withoutOverlapping();
+Schedule::command('prelaunch:media:cleanup-orphans --force --older-than=24')->daily()->withoutOverlapping();

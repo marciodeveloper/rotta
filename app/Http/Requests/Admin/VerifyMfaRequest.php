@@ -23,7 +23,7 @@ class VerifyMfaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'digits:6'],
+            'code' => ['required', 'string', 'max:32', 'regex:/^(?:\d{6}|[A-Fa-f0-9]{4}(?:-[A-Fa-f0-9]{4}){2})$/'],
         ];
     }
 }
