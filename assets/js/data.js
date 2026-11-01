@@ -8,9 +8,9 @@ const image = function(id, width) {
 
 export const heroSlides = [
   {
-    image: localPhoto("vassouras-ponte-historica.webp"),
+    image: localPhoto("vassouras-igreja-praca.webp"),
     fallback: image("photo-1724161438805-dc1d37cddb35", 2400),
-    alt: "Ponte histórica e paisagem de Vassouras",
+    alt: "Igreja histórica e praça de Vassouras",
     statement: "Há lugares onde o tempo deixa marcas bonitas.",
     caption: "Vassouras · patrimônio e memória."
   },
@@ -29,9 +29,9 @@ export const heroSlides = [
     caption: "Miguel Pereira · encontros e experiências."
   },
   {
-    image: localPhoto("vassouras-reflexos-por-do-sol.webp"),
+    image: localPhoto("vassouras-rua-entardecer.webp"),
     fallback: image("photo-1500530855697-b586d89ba3ee", 2400),
-    alt: "Paisagem de Vassouras refletida na água ao entardecer",
+    alt: "Rua histórica de Vassouras banhada pela luz do entardecer",
     statement: "Às vezes, o melhor caminho é desacelerar.",
     caption: "Vassouras · paisagens e contemplação."
   }
@@ -278,7 +278,8 @@ export const stories = [
     description: "Uma caminhada por fachadas, praças e encontros que mantêm viva a identidade de Vassouras.",
     image: localPhoto("vassouras-casario-colonial.webp"),
     fallback: image("photo-1762995875767-9b67bef64f05", 1400),
-    alt: "Fachada histórica em Vassouras"
+    alt: "Fachada histórica em Vassouras",
+    protected: true
   },
   {
     id: "memoria-nos-trilhos",
@@ -287,7 +288,8 @@ export const stories = [
     description: "A Maria-fumaça transforma patrimônio ferroviário em convite para conhecer Miguel Pereira.",
     image: localPhoto("miguel-pereira-maria-fumaca.webp"),
     fallback: image("photo-1500530855697-b586d89ba3ee", 1400),
-    alt: "Locomotiva a vapor em Miguel Pereira"
+    alt: "Locomotiva a vapor em Miguel Pereira",
+    protected: true
   }
 ];
 
