@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Contracts\CepLookup;
 use App\Contracts\TurnstileVerifier;
 use App\Jobs\DeliverConfirmationEmail;
 use App\Models\EmailOutboxMessage;
@@ -36,6 +37,40 @@ class PreRegistrationControllerTest extends TestCase
             '/<button[^>]*data-cep-button[^>]*(?:formaction|formmethod)=/',
             $response->getContent(),
         );
+    }
+
+    public function test_ajax_cep_lookup_does_not_contaminate_invalid_submission_redirect(): void
+    {
+        PrivacyNotice::factory()->published()->create(['version' => '2026-11-01']);
+        $this->mock(CepLookup::class)->shouldReceive('find')->once()->with('12604250')->andReturn([
+            'postal_code' => '12604250',
+            'street' => 'Rua Galante Giuseppe',
+            'neighborhood' => 'Vila Geny',
+            'city' => 'Lorena',
+            'state' => 'SP',
+        ]);
+
+        $this->get(route('pre-registration.create'))->assertOk();
+        $this->withHeader('X-Requested-With', 'XMLHttpRequest')
+            ->getJson(route('cep.lookup', ['postal_code' => '12604250']))
+            ->assertOk();
+
+        $this->post(route('pre-registration.store'), [])
+            ->assertRedirect(route('pre-registration.create'));
+        $this->assertDatabaseCount('pre_registrations', 0);
+        $this->assertDatabaseCount('email_outbox_messages', 0);
+    }
+
+    public function test_invalid_submission_redirects_to_form_when_session_previous_url_is_cep_endpoint(): void
+    {
+        $cepUrl = route('cep.lookup', ['postal_code' => '12604250']);
+
+        $this->withSession(['_previous.url' => $cepUrl])
+            ->post(route('pre-registration.store'), [])
+            ->assertRedirect(route('pre-registration.create'));
+
+        $this->assertDatabaseCount('pre_registrations', 0);
+        $this->assertDatabaseCount('email_outbox_messages', 0);
     }
 
     public function test_valid_payload_creates_encrypted_record_and_transactional_outbox(): void

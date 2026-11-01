@@ -4,10 +4,12 @@ namespace App\Http\Requests;
 
 use App\Rules\ValidBrazilianDocument;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\Attributes\RedirectToRoute;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 
+#[RedirectToRoute('pre-registration.create')]
 class StorePreRegistrationRequest extends FormRequest
 {
     /**

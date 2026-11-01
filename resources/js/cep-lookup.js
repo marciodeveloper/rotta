@@ -45,7 +45,10 @@ export const installCepLookup = ({ root = document, fetcher = globalThis.fetch, 
         try {
             const response = await fetcher(`/api/cep?postal_code=${encodeURIComponent(postalCode)}`, {
                 method: 'GET',
-                headers: { Accept: 'application/json' },
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
                 credentials: 'same-origin',
                 signal: controller.signal,
             });

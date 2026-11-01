@@ -90,6 +90,10 @@ test('click uses fetch without submitting or navigating and fills the Lorena add
     assert.equal(requestedUrl, '/api/cep?postal_code=12604250');
     assert.equal(requestedOptions.method, 'GET');
     assert.equal(requestedOptions.credentials, 'same-origin');
+    assert.deepEqual(requestedOptions.headers, {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+    });
     assert.equal(page.input.value, '12604-250');
     assert.equal(page.fields.street.value, 'Rua Galante Giuseppe');
     assert.equal(page.fields.neighborhood.value, 'Vila Geny');
