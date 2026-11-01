@@ -18,6 +18,17 @@ class PreRegistrationControllerTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    public function test_form_links_the_full_notice_and_displays_the_current_version(): void
+    {
+        PrivacyNotice::factory()->published()->create(['version' => '2026-11-01']);
+
+        $this->get(route('pre-registration.create'))
+            ->assertOk()
+            ->assertSee('Versão 2026-11-01')
+            ->assertSee('/privacidade/', false)
+            ->assertSee('Leia o aviso de privacidade completo');
+    }
+
     public function test_valid_payload_creates_encrypted_record_and_transactional_outbox(): void
     {
         Queue::fake();
