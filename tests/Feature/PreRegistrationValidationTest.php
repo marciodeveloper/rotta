@@ -265,6 +265,29 @@ class PreRegistrationValidationTest extends TestCase
             ->assertSee('Informe um endereço de e-mail válido.');
     }
 
+    public function test_gallery_upload_error_targets_review_step_and_preserves_text_fields(): void
+    {
+        $notice = PrivacyNotice::factory()->published()->create();
+        $payload = [...$this->validPayload($notice),
+            'business_name' => 'Negócio preservado após erro',
+            'short_description' => 'Descrição preservada após uma falha de upload da galeria.',
+            'gallery' => [UploadedFile::fake()->create('arquivo.pdf', 10, 'application/pdf')],
+            'gallery_alt' => ['Arquivo inválido para teste'],
+            'media_rights_confirmed' => '1',
+        ];
+
+        $response = $this->followingRedirects()->post(route('pre-registration.store'), $payload);
+
+        $response->assertOk()
+            ->assertSee('data-server-error-field="gallery.0"', false)
+            ->assertSee('data-server-error-for="gallery"', false)
+            ->assertSee('Cada fotografia deve ser uma imagem JPEG, PNG ou WebP.')
+            ->assertSee('value="Negócio preservado após erro"', false)
+            ->assertSee('Descrição preservada após uma falha de upload da galeria.');
+        $this->assertDatabaseCount('pre_registrations', 0);
+        $this->assertDatabaseCount('email_outbox_messages', 0);
+    }
+
     /** @return array<string, mixed> */
     private function validPayload(PrivacyNotice $notice): array
     {
