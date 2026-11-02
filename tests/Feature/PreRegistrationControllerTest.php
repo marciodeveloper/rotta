@@ -190,7 +190,7 @@ class PreRegistrationControllerTest extends TestCase
 
         $response = $this->post(route('pre-registration.store'), $payload);
 
-        $response->assertInvalid(['document' => 'Informe um CPF ou CNPJ válido']);
+        $response->assertInvalid(['document' => 'Informe um CNPJ válido, incluindo os dígitos verificadores.']);
         $this->assertDatabaseCount('pre_registrations', 0);
     }
 
