@@ -21,7 +21,7 @@
         </div>
     </aside>
 
-    <div class="form-panel" data-pre-registration-root data-initial-step="{{ $errors->any() ? 1 : 1 }}">
+    <div class="form-panel" data-pre-registration-root>
         <div class="form-intro">
             <span class="form-kicker">Manifestação de interesse</span>
             <h2>Comece seu pré-cadastro</h2>
@@ -31,11 +31,20 @@
         @if ($errors->any())
             <div class="alert alert-error" role="alert" tabindex="-1" data-error-summary>
                 <strong>Revise os campos indicados.</strong>
-                <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                <ul>
+                    @foreach ($errors->messages() as $field => $messages)
+                        <li><a href="#field-{{ str_replace(['.', '*'], '-', $field) }}" data-server-error-field="{{ $field }}">{{ $messages[0] }}</a></li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
-        <form method="POST" action="{{ route('pre-registration.store') }}" enctype="multipart/form-data" x-data="preRegistrationForm" x-on:submit="startSubmitting" novalidate>
+        <div class="alert alert-error" role="alert" tabindex="-1" data-client-error-summary hidden>
+            <strong>Revise os campos indicados.</strong>
+            <ul></ul>
+        </div>
+
+        <form method="POST" action="{{ route('pre-registration.store') }}" enctype="multipart/form-data" x-data="preRegistrationForm" x-on:submit="startSubmitting" data-pre-registration-form novalidate>
             @csrf
             <input class="honeypot" type="text" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="privacy_notice_version" value="{{ $privacyNotice->version }}">
@@ -46,89 +55,91 @@
                 @endforeach
             </ol>
 
-            <section class="form-step" x-show="isStep(1)" x-cloak aria-labelledby="step-1-title">
+            <section class="form-step" x-show="isStep(1)" x-cloak aria-labelledby="step-1-title" data-step="1">
                 <div class="step-heading"><span>01 / 04</span><h3 id="step-1-title">Identificação</h3></div>
-                <fieldset class="choice-grid">
+                <fieldset class="choice-grid" data-field-container>
                     <legend>Como deseja se cadastrar?</legend>
-                    <label><input type="radio" name="applicant_type" value="company" x-model="applicantType" {{ old('applicant_type', 'company') === 'company' ? 'checked' : '' }}><span><strong>Empresa</strong><small>CNPJ</small></span></label>
+                    <label><input id="field-applicant_type" type="radio" name="applicant_type" value="company" x-model="applicantType" {{ old('applicant_type', 'company') === 'company' ? 'checked' : '' }}><span><strong>Empresa</strong><small>CNPJ</small></span></label>
                     <label><input type="radio" name="applicant_type" value="professional" x-model="applicantType" {{ old('applicant_type') === 'professional' ? 'checked' : '' }}><span><strong>Profissional</strong><small>CPF</small></span></label>
+                    <x-form-error field="applicant_type" />
                 </fieldset>
                 <div class="field-grid">
-                    <label class="field"><span x-text="documentLabel">CNPJ</span><input name="document" value="{{ old('document') }}" x-bind:inputmode="documentInputMode" autocomplete="off" required aria-describedby="document-help document-feedback @error('document') document-error @enderror" data-document-input><small id="document-help">Aceita CNPJ numérico ou alfanumérico. A validação matemática não comprova cadastro ativo nem titularidade.</small><small id="document-feedback" data-document-feedback aria-live="polite"></small>@error('document')<b id="document-error">{{ $message }}</b>@enderror</label>
-                    <label class="field"><span>Nome comercial ou profissional</span><input name="business_name" value="{{ old('business_name') }}" maxlength="160" required>@error('business_name')<b>{{ $message }}</b>@enderror</label>
-                    <label class="field"><span>Categoria</span><select name="category" required><option value="">Selecione</option>@foreach ($categories as $category)<option @selected(old('category') === $category)>{{ $category }}</option>@endforeach</select>@error('category')<b>{{ $message }}</b>@enderror</label>
-                    <label class="field field-wide"><span>Descrição curta</span><textarea name="short_description" maxlength="500" rows="4" required>{{ old('short_description') }}</textarea><small>Entre 20 e 500 caracteres.</small>@error('short_description')<b>{{ $message }}</b>@enderror</label>
+                    <label class="field" data-field-container><span x-text="documentLabel">CNPJ</span><input id="field-document" name="document" value="{{ old('document') }}" x-bind:inputmode="documentInputMode" autocomplete="off" required aria-describedby="document-help document-feedback @error('document') server-error-document @enderror" @error('document') aria-invalid="true" @enderror data-document-input><small id="document-help">Aceita CNPJ numérico ou alfanumérico. A validação matemática não comprova cadastro ativo nem titularidade.</small><small id="document-feedback" data-document-feedback aria-live="polite"></small><x-form-error field="document" /></label>
+                    <label class="field" data-field-container><span>Nome comercial ou profissional</span><input id="field-business_name" name="business_name" value="{{ old('business_name') }}" maxlength="160" required @error('business_name') aria-invalid="true" aria-describedby="server-error-business_name" @enderror><x-form-error field="business_name" /></label>
+                    <label class="field" data-field-container><span>Categoria</span><select id="field-category" name="category" required @error('category') aria-invalid="true" aria-describedby="server-error-category" @enderror><option value="">Selecione</option>@foreach ($categories as $category)<option @selected(old('category') === $category)>{{ $category }}</option>@endforeach</select><x-form-error field="category" /></label>
+                    <label class="field field-wide" data-field-container><span>Descrição curta</span><textarea id="field-short_description" name="short_description" minlength="20" maxlength="500" rows="4" required aria-describedby="short-description-help @error('short_description') server-error-short_description @enderror" @error('short_description') aria-invalid="true" @enderror>{{ old('short_description') }}</textarea><small id="short-description-help">Entre 20 e 500 caracteres.</small><x-form-error field="short_description" /></label>
                 </div>
                 <div class="step-actions"><button class="button button-primary" type="button" x-on:click="next">Continuar <span>→</span></button></div>
             </section>
 
-            <section class="form-step" x-show="isStep(2)" x-cloak aria-labelledby="step-2-title">
+            <section class="form-step" x-show="isStep(2)" x-cloak aria-labelledby="step-2-title" data-step="2">
                 <div class="step-heading"><span>02 / 04</span><h3 id="step-2-title">Contato</h3></div>
                 <div class="field-grid">
-                    <label class="field field-wide"><span>Nome do responsável</span><input name="responsible_name" value="{{ old('responsible_name') }}" maxlength="160" autocomplete="name" required>@error('responsible_name')<b>{{ $message }}</b>@enderror</label>
-                    <label class="field"><span>E-mail</span><input type="email" name="email" value="{{ old('email') }}" maxlength="254" autocomplete="email" required>@error('email')<b>{{ $message }}</b>@enderror</label>
-                    <label class="field"><span>Telefone / WhatsApp</span><input name="phone" value="{{ old('phone') }}" inputmode="tel" autocomplete="tel" placeholder="(24) 99999-9999" required>@error('phone')<b>{{ $message }}</b>@enderror</label>
-                    <label class="field"><span>Website <i>opcional</i></span><input type="url" name="website" value="{{ old('website') }}" placeholder="https://" maxlength="500">@error('website')<b>{{ $message }}</b>@enderror</label>
-                    <label class="field"><span>Instagram <i>opcional</i></span><input name="instagram" value="{{ old('instagram') }}" placeholder="@seuperfil" maxlength="31">@error('instagram')<b>{{ $message }}</b>@enderror</label>
+                    <label class="field field-wide" data-field-container><span>Nome do responsável</span><input id="field-responsible_name" name="responsible_name" value="{{ old('responsible_name') }}" maxlength="160" autocomplete="name" required @error('responsible_name') aria-invalid="true" aria-describedby="server-error-responsible_name" @enderror><x-form-error field="responsible_name" /></label>
+                    <label class="field" data-field-container><span>E-mail</span><input id="field-email" type="email" name="email" value="{{ old('email') }}" maxlength="254" autocomplete="email" required @error('email') aria-invalid="true" aria-describedby="server-error-email" @enderror><x-form-error field="email" /></label>
+                    <label class="field" data-field-container><span>Telefone / WhatsApp</span><input id="field-phone" name="phone" value="{{ old('phone') }}" inputmode="tel" autocomplete="tel" placeholder="(24) 99999-9999" required @error('phone') aria-invalid="true" aria-describedby="server-error-phone" @enderror><x-form-error field="phone" /></label>
+                    <label class="field" data-field-container><span>Website <i>opcional</i></span><input id="field-website" type="url" name="website" value="{{ old('website') }}" placeholder="https://" maxlength="500" @error('website') aria-invalid="true" aria-describedby="server-error-website" @enderror><x-form-error field="website" /></label>
+                    <label class="field" data-field-container><span>Instagram <i>opcional</i></span><input id="field-instagram" name="instagram" value="{{ old('instagram') }}" placeholder="@seuperfil" maxlength="31" @error('instagram') aria-invalid="true" aria-describedby="server-error-instagram" @enderror><x-form-error field="instagram" /></label>
                 </div>
                 <div class="step-actions"><button class="button button-secondary" type="button" x-on:click="previous">Voltar</button><button class="button button-primary" type="button" x-on:click="next">Continuar <span>→</span></button></div>
             </section>
 
-            <section class="form-step" x-show="isStep(3)" x-cloak aria-labelledby="step-3-title">
+            <section class="form-step" x-show="isStep(3)" x-cloak aria-labelledby="step-3-title" data-step="3">
                 <div class="step-heading"><span>03 / 04</span><h3 id="step-3-title">Endereço profissional</h3></div>
-                <fieldset class="choice-grid">
+                <fieldset class="choice-grid" data-field-container>
                     <legend>Como você atende?</legend>
-                    <label><input type="radio" name="address_mode" value="public_address" x-model="addressMode" {{ old('address_mode', 'public_address') === 'public_address' ? 'checked' : '' }}><span><strong>Endereço público</strong><small>Loja, escritório ou espaço</small></span></label>
+                    <label><input id="field-address_mode" type="radio" name="address_mode" value="public_address" x-model="addressMode" {{ old('address_mode', 'public_address') === 'public_address' ? 'checked' : '' }}><span><strong>Endereço público</strong><small>Loja, escritório ou espaço</small></span></label>
                     <label><input type="radio" name="address_mode" value="service_area" x-model="addressMode" {{ old('address_mode') === 'service_area' ? 'checked' : '' }}><span><strong>Área de atendimento</strong><small>Sem ponto físico público</small></span></label>
+                    <x-form-error field="address_mode" />
                 </fieldset>
                 <div x-show="hasPublicAddress" x-cloak>
                     @if ($googleMapsApiKey)
                         <div class="place-search"><span>Buscar endereço com Google</span><div data-google-place data-google-key="{{ $googleMapsApiKey }}"></div><small>Você também pode preencher manualmente abaixo.</small></div>
                     @endif
-                    <div class="cep-row"><label class="field"><span>CEP</span><input name="postal_code" value="{{ old('postal_code') }}" inputmode="numeric" autocomplete="postal-code" maxlength="9" data-cep-input aria-describedby="cep-status" x-bind:disabled="hasServiceArea"></label><button class="button button-secondary" type="button" formnovalidate data-cep-button>Buscar CEP</button><span id="cep-status" data-cep-status role="status" aria-live="polite"></span></div>
+                    <div class="cep-row"><label class="field" data-field-container><span>CEP</span><input id="field-postal_code" name="postal_code" value="{{ old('postal_code') }}" inputmode="numeric" autocomplete="postal-code" maxlength="9" data-cep-input aria-describedby="cep-status @error('postal_code') server-error-postal_code @enderror" x-bind:disabled="hasServiceArea" @error('postal_code') aria-invalid="true" @enderror><x-form-error field="postal_code" /></label><button class="button button-secondary" type="button" formnovalidate data-cep-button>Buscar CEP</button><span id="cep-status" data-cep-status role="status" aria-live="polite"></span></div>
                     <div class="field-grid">
-                        <label class="field field-wide"><span>Logradouro</span><input name="street" value="{{ old('street') }}" maxlength="180" data-address-field="street" x-bind:disabled="hasServiceArea"></label>
-                        <label class="field"><span>Número</span><input name="street_number" value="{{ old('street_number') }}" maxlength="30" x-bind:disabled="hasServiceArea"></label>
-                        <label class="field"><span>Complemento <i>opcional</i></span><input name="complement" value="{{ old('complement') }}" maxlength="100" x-bind:disabled="hasServiceArea"></label>
-                        <label class="field"><span>Bairro</span><input name="neighborhood" value="{{ old('neighborhood') }}" maxlength="120" data-address-field="neighborhood" x-bind:disabled="hasServiceArea"></label>
-                        <label class="field"><span>Cidade</span><input name="city" value="{{ old('city') }}" maxlength="120" data-address-field="city" x-bind:disabled="hasServiceArea" required></label>
-                        <label class="field"><span>UF</span><input name="state" value="{{ old('state') }}" maxlength="2" data-address-field="state" x-bind:disabled="hasServiceArea" required></label>
+                        <label class="field field-wide" data-field-container><span>Logradouro</span><input id="field-street" name="street" value="{{ old('street') }}" maxlength="180" data-address-field="street" x-bind:disabled="hasServiceArea" @error('street') aria-invalid="true" aria-describedby="server-error-street" @enderror><x-form-error field="street" /></label>
+                        <label class="field" data-field-container><span>Número</span><input id="field-street_number" name="street_number" value="{{ old('street_number') }}" maxlength="30" x-bind:disabled="hasServiceArea" @error('street_number') aria-invalid="true" aria-describedby="server-error-street_number" @enderror><x-form-error field="street_number" /></label>
+                        <label class="field" data-field-container><span>Complemento <i>opcional</i></span><input id="field-complement" name="complement" value="{{ old('complement') }}" maxlength="100" x-bind:disabled="hasServiceArea" @error('complement') aria-invalid="true" aria-describedby="server-error-complement" @enderror><x-form-error field="complement" /></label>
+                        <label class="field" data-field-container><span>Bairro</span><input id="field-neighborhood" name="neighborhood" value="{{ old('neighborhood') }}" maxlength="120" data-address-field="neighborhood" x-bind:disabled="hasServiceArea" @error('neighborhood') aria-invalid="true" aria-describedby="server-error-neighborhood" @enderror><x-form-error field="neighborhood" /></label>
+                        <label class="field" data-field-container><span>Cidade</span><input id="field-city-public" name="city" value="{{ old('city') }}" maxlength="120" data-address-field="city" x-bind:disabled="hasServiceArea" required @error('city') aria-invalid="true" aria-describedby="server-error-city-public" @enderror>@error('city')<p id="server-error-city-public" class="field-error" data-server-error data-server-error-for="city" aria-live="polite">{{ $message }}</p>@enderror</label>
+                        <label class="field" data-field-container><span>UF</span><input id="field-state-public" name="state" value="{{ old('state') }}" maxlength="2" data-address-field="state" x-bind:disabled="hasServiceArea" required @error('state') aria-invalid="true" aria-describedby="server-error-state-public" @enderror>@error('state')<p id="server-error-state-public" class="field-error" data-server-error data-server-error-for="state" aria-live="polite">{{ $message }}</p>@enderror</label>
                     </div>
                     <input type="hidden" name="google_place_id" data-address-field="google_place_id"><input type="hidden" name="latitude" data-address-field="latitude"><input type="hidden" name="longitude" data-address-field="longitude">
                 </div>
                 <div x-show="hasServiceArea" x-cloak class="field-grid">
-                    <label class="field"><span>Cidade-base</span><input name="city" value="{{ old('city') }}" maxlength="120" x-bind:disabled="hasPublicAddress" required></label>
-                    <label class="field"><span>UF</span><input name="state" value="{{ old('state') }}" maxlength="2" x-bind:disabled="hasPublicAddress" required></label>
-                    <label class="field field-wide"><span>Área de atendimento</span><textarea name="service_area" rows="3" maxlength="300" placeholder="Ex.: Vassouras, Miguel Pereira e região" x-bind:disabled="hasPublicAddress">{{ old('service_area') }}</textarea></label>
+                    <label class="field" data-field-container><span>Cidade-base</span><input id="field-city-service" name="city" value="{{ old('city') }}" maxlength="120" x-bind:disabled="hasPublicAddress" required @error('city') aria-invalid="true" aria-describedby="server-error-city-service" @enderror>@error('city')<p id="server-error-city-service" class="field-error" data-server-error data-server-error-for="city" aria-live="polite">{{ $message }}</p>@enderror</label>
+                    <label class="field" data-field-container><span>UF</span><input id="field-state-service" name="state" value="{{ old('state') }}" maxlength="2" x-bind:disabled="hasPublicAddress" required @error('state') aria-invalid="true" aria-describedby="server-error-state-service" @enderror>@error('state')<p id="server-error-state-service" class="field-error" data-server-error data-server-error-for="state" aria-live="polite">{{ $message }}</p>@enderror</label>
+                    <label class="field field-wide" data-field-container><span>Área de atendimento</span><textarea id="field-service_area" name="service_area" rows="3" maxlength="300" placeholder="Ex.: Vassouras, Miguel Pereira e região" x-bind:disabled="hasPublicAddress" @error('service_area') aria-invalid="true" aria-describedby="server-error-service_area" @enderror>{{ old('service_area') }}</textarea><x-form-error field="service_area" /></label>
                 </div>
-                @foreach (['postal_code','street','street_number','neighborhood','city','state','service_area'] as $field) @error($field)<p class="field-error">{{ $message }}</p>@enderror @endforeach
                 <div class="step-actions"><button class="button button-secondary" type="button" x-on:click="previous">Voltar</button><button class="button button-primary" type="button" x-on:click="next">Revisar <span>→</span></button></div>
             </section>
 
-            <section class="form-step" x-show="isStep(4)" x-cloak aria-labelledby="step-4-title">
+            <section class="form-step" x-show="isStep(4)" x-cloak aria-labelledby="step-4-title" data-step="4">
                 <div class="step-heading"><span>04 / 04</span><h3 id="step-4-title">Privacidade e envio</h3></div>
                 <div class="review-note"><strong>Antes de enviar</strong><p>Confirme os dados nas etapas anteriores. Após o envio, mandaremos um link de confirmação ao e-mail informado.</p></div>
                 <fieldset class="media-uploader" data-media-uploader>
                     <legend>Imagens do negócio <small>opcional</small></legend>
                     <p>JPEG, PNG ou WebP. Até 5 MB por imagem e oito imagens no total. As imagens ficam privadas até aprovação.</p>
-                    <div class="media-slot"><label><span>Logo</span><input type="file" name="logo" accept="image/jpeg,image/png,image/webp" data-media-input="logo"></label><label class="field"><span>Descrição alternativa</span><input name="logo_alt" maxlength="240" value="{{ old('logo_alt') }}"></label><div data-media-preview="logo"></div></div>
-                    <div class="media-slot"><label><span>Foto de capa</span><input type="file" name="cover" accept="image/jpeg,image/png,image/webp" data-media-input="cover"></label><label class="field"><span>Descrição alternativa</span><input name="cover_alt" maxlength="240" value="{{ old('cover_alt') }}"></label><div data-media-preview="cover"></div></div>
-                    <div class="media-dropzone" data-gallery-dropzone tabindex="0" role="button"><strong>Fotografias</strong><span>Arraste até seis imagens ou selecione arquivos.</span><input type="file" name="gallery[]" accept="image/jpeg,image/png,image/webp" multiple data-gallery-input aria-label="Selecionar fotografias do negócio"></div>
+                    <div class="media-slot"><label data-field-container><span>Logo</span><input id="field-logo" type="file" name="logo" accept="image/jpeg,image/png,image/webp" data-media-input="logo" @error('logo') aria-invalid="true" aria-describedby="server-error-logo" @enderror><x-form-error field="logo" /></label><label class="field" data-field-container><span>Descrição alternativa</span><input id="field-logo_alt" name="logo_alt" maxlength="240" value="{{ old('logo_alt') }}" @error('logo_alt') aria-invalid="true" aria-describedby="server-error-logo_alt" @enderror><x-form-error field="logo_alt" /></label><div data-media-preview="logo"></div></div>
+                    <div class="media-slot"><label data-field-container><span>Foto de capa</span><input id="field-cover" type="file" name="cover" accept="image/jpeg,image/png,image/webp" data-media-input="cover" @error('cover') aria-invalid="true" aria-describedby="server-error-cover" @enderror><x-form-error field="cover" /></label><label class="field" data-field-container><span>Descrição alternativa</span><input id="field-cover_alt" name="cover_alt" maxlength="240" value="{{ old('cover_alt') }}" @error('cover_alt') aria-invalid="true" aria-describedby="server-error-cover_alt" @enderror><x-form-error field="cover_alt" /></label><div data-media-preview="cover"></div></div>
+                    <div class="media-dropzone" data-gallery-dropzone data-field-container tabindex="0" role="button"><strong>Fotografias</strong><span>Arraste até seis imagens ou selecione arquivos.</span><input id="field-gallery" type="file" name="gallery[]" accept="image/jpeg,image/png,image/webp" multiple data-gallery-input aria-label="Selecionar fotografias do negócio" @error('gallery') aria-invalid="true" aria-describedby="server-error-gallery" @enderror><x-form-error field="gallery" /><x-form-error field="gallery.*" target="gallery" /><x-form-error field="gallery_alt" target="gallery" /><x-form-error field="gallery_alt.*" target="gallery" /></div>
                     <ol class="media-gallery" data-gallery-preview aria-live="polite"></ol>
-                    <label class="check-field"><input type="checkbox" name="media_rights_confirmed" value="1" {{ old('media_rights_confirmed') ? 'checked' : '' }}><span>Declaro possuir autorização para usar as imagens enviadas.</span></label>
-                    @foreach (['logo','logo_alt','cover','cover_alt','gallery','gallery.*','gallery_alt.*','media_rights_confirmed','media'] as $field) @error($field)<p class="field-error">{{ $message }}</p>@enderror @endforeach
+                    <div data-field-container><label class="check-field"><input id="field-media_rights_confirmed" type="checkbox" name="media_rights_confirmed" value="1" {{ old('media_rights_confirmed') ? 'checked' : '' }} @error('media_rights_confirmed') aria-invalid="true" aria-describedby="server-error-media_rights_confirmed" @enderror><span>Declaro possuir autorização para usar as imagens enviadas.</span></label><x-form-error field="media_rights_confirmed" /></div>
+                    <x-form-error field="media" target="gallery" />
                 </fieldset>
                 <article class="privacy-card"><span>Versão {{ $privacyNotice->version }} · {{ strtoupper($privacyNotice->status) }}</span><h4>{{ $privacyNotice->title }}</h4><p>{{ $privacyNotice->content }}</p><dl><div><dt>Finalidade</dt><dd>{{ $privacyNotice->purpose }}</dd></div><div><dt>Controlador</dt><dd>{{ $privacyNotice->controller_name }}</dd></div><div><dt>Contato</dt><dd>{{ $privacyNotice->contact_email }}</dd></div><div><dt>Base legal e retenção</dt><dd>{{ $registrationOpen ? $privacyNotice->legal_basis.' · '.$privacyNotice->retention_days.' dias' : 'Pendentes de aprovação jurídica.' }}</dd></div></dl><p><a href="/privacidade/" target="_blank" rel="noopener noreferrer">Leia o aviso de privacidade completo</a></p></article>
-                <label class="check-field"><input type="checkbox" name="privacy_accepted" value="1" required><span>Li e aceito o aviso de privacidade apresentado.</span></label>
+                <div data-field-container><label class="check-field"><input id="field-privacy_accepted" type="checkbox" name="privacy_accepted" value="1" required {{ old('privacy_accepted') ? 'checked' : '' }} @error('privacy_accepted') aria-invalid="true" aria-describedby="server-error-privacy_accepted" @enderror><span>Li e aceito o aviso de privacidade apresentado.</span></label><x-form-error field="privacy_accepted" /></div>
                 <label class="check-field"><input type="checkbox" name="marketing_opt_in" value="1" {{ old('marketing_opt_in') ? 'checked' : '' }}><span>Quero receber novidades da ROTTA. <small>Opcional e desmarcado por padrão.</small></span></label>
-                @error('privacy_accepted')<p class="field-error">{{ $message }}</p>@enderror
-                @if ($registrationOpen && $turnstileSiteKey)
-                    <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}" data-action="{{ config('prelaunch.turnstile.expected_action') }}" data-theme="light"></div>
-                @else
-                    <div class="integration-pending" role="status">{{ $registrationOpen ? 'Turnstile ainda não configurado. O envio público permanece bloqueado até a credencial ser fornecida.' : 'O pré-cadastro permanece bloqueado até a publicação do aviso de privacidade aprovado.' }}</div>
-                    <input type="hidden" name="cf-turnstile-response" value="">
-                @endif
-                @error('cf-turnstile-response')<p class="field-error">{{ $message }}</p>@enderror
+                <div data-field-container>
+                    @if ($registrationOpen && $turnstileSiteKey)
+                        <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}" data-action="{{ config('prelaunch.turnstile.expected_action') }}" data-theme="light"></div>
+                    @else
+                        <div class="integration-pending" role="status">{{ $registrationOpen ? 'Turnstile ainda não configurado. O envio público permanece bloqueado até a credencial ser fornecida.' : 'O pré-cadastro permanece bloqueado até a publicação do aviso de privacidade aprovado.' }}</div>
+                        <input id="field-cf-turnstile-response" type="hidden" name="cf-turnstile-response" value="">
+                    @endif
+                    <x-form-error field="cf-turnstile-response" />
+                </div>
                 <div class="step-actions"><button class="button button-secondary" type="button" x-on:click="previous">Voltar</button><button class="button button-primary" type="submit" x-bind:disabled="submitting || {{ $registrationOpen && $turnstileSiteKey ? 'false' : 'true' }}" @disabled(! $registrationOpen || ! $turnstileSiteKey)><span x-text="submitLabel">Enviar pré-cadastro</span></button></div>
             </section>
         </form>

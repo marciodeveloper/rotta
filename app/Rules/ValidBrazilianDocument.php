@@ -19,7 +19,9 @@ class ValidBrazilianDocument implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! is_string($value) || ! (new DocumentValidator)->isValidFor($this->applicantType, $value)) {
-            $fail('Informe um CPF ou CNPJ válido para o tipo selecionado.');
+            $fail($this->applicantType === 'professional'
+                ? 'Informe um CPF válido, incluindo os dígitos verificadores.'
+                : 'Informe um CNPJ válido, incluindo os dígitos verificadores.');
         }
     }
 }

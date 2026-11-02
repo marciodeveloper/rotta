@@ -1,42 +1,54 @@
 import Alpine from '@alpinejs/csp';
 import { installCepLookup } from './cep-lookup';
+import { cnpjIsValid, cpfIsValid, createPreRegistrationValidator } from './pre-registration-validation';
 
-Alpine.data('preRegistrationForm', () => ({
-    step: 1,
-    submitting: false,
-    applicantType: 'company',
-    addressMode: 'public_address',
-    init() {
-        this.applicantType = document.querySelector('input[name="applicant_type"]:checked')?.value ?? 'company';
-        this.addressMode = document.querySelector('input[name="address_mode"]:checked')?.value ?? 'public_address';
-    },
-    get documentLabel() { return this.applicantType === 'company' ? 'CNPJ' : 'CPF'; },
-    get documentInputMode() { return this.applicantType === 'company' ? 'text' : 'numeric'; },
-    get hasPublicAddress() { return this.addressMode === 'public_address'; },
-    get hasServiceArea() { return this.addressMode === 'service_area'; },
-    get submitLabel() { return this.submitting ? 'Enviando…' : 'Enviar pré-cadastro'; },
-    isStep(value) { return this.step === value; },
-    stepClass(value) { return value === this.step ? 'is-active' : (value < this.step ? 'is-complete' : ''); },
-    next() {
-        const visibleStep = [...document.querySelectorAll('.form-step')]
-            .find((element) => getComputedStyle(element).display !== 'none');
-        const invalidField = visibleStep?.querySelector(':invalid');
+Alpine.data('preRegistrationForm', () => {
+    let validator;
 
-        if (invalidField instanceof HTMLElement) {
-            invalidField.reportValidity();
-            invalidField.focus();
-
-            return;
-        }
-
-        if (this.step < 4) {
-            this.step += 1;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    },
-    previous() { if (this.step > 1) { this.step -= 1; window.scrollTo({ top: 0, behavior: 'smooth' }); } },
-    startSubmitting() { this.submitting = true; },
-}));
+    return {
+        step: 1,
+        submitting: false,
+        applicantType: 'company',
+        addressMode: 'public_address',
+        init() {
+            this.applicantType = document.querySelector('input[name="applicant_type"]:checked')?.value ?? 'company';
+            this.addressMode = document.querySelector('input[name="address_mode"]:checked')?.value ?? 'public_address';
+            const form = document.querySelector('[data-pre-registration-form]');
+            validator = createPreRegistrationValidator({
+                form,
+                summary: document.querySelector('[data-client-error-summary]'),
+                serverSummary: document.querySelector('[data-error-summary]'),
+                onStepRequested: (step) => { this.step = step; },
+            });
+            this.step = validator.initialStep();
+            if (document.querySelector('[data-error-summary]')) {
+                setTimeout(() => document.querySelector('[data-error-summary]')?.focus(), 0);
+            }
+        },
+        get documentLabel() { return this.applicantType === 'company' ? 'CNPJ' : 'CPF'; },
+        get documentInputMode() { return this.applicantType === 'company' ? 'text' : 'numeric'; },
+        get hasPublicAddress() { return this.addressMode === 'public_address'; },
+        get hasServiceArea() { return this.addressMode === 'service_area'; },
+        get submitLabel() { return this.submitting ? 'Enviando…' : 'Enviar pré-cadastro'; },
+        isStep(value) { return this.step === value; },
+        stepClass(value) { return value === this.step ? 'is-active' : (value < this.step ? 'is-complete' : ''); },
+        next() {
+            if (! validator.validateStep(this.step).valid) return;
+            if (this.step < 4) {
+                this.step += 1;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        },
+        previous() { if (this.step > 1) { this.step -= 1; window.scrollTo({ top: 0, behavior: 'smooth' }); } },
+        startSubmitting(event) {
+            if (! validator.validateAll().valid) {
+                event.preventDefault();
+                return;
+            }
+            this.submitting = true;
+        },
+    };
+});
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -44,29 +56,6 @@ Alpine.start();
 const onlyDigits = (value) => value.replace(/\D/g, '');
 const documentInput = document.querySelector('[data-document-input]');
 const documentFeedback = document.querySelector('[data-document-feedback]');
-
-const cpfIsValid = (value) => {
-    const digits = onlyDigits(value);
-    if (digits.length !== 11 || /^(\d)\1{10}$/.test(digits)) return false;
-    return [9, 10].every((position) => {
-        let sum = 0;
-        for (let index = 0; index < position; index += 1) sum += Number(digits[index]) * (position + 1 - index);
-        return Number(digits[position]) === ((10 * sum) % 11) % 10;
-    });
-};
-
-const cnpjIsValid = (value) => {
-    const normalized = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (! /^[A-Z0-9]{12}[0-9]{2}$/.test(normalized) || /^(\d)\1{13}$/.test(normalized)) return false;
-    const calculate = (source, weights) => {
-        const sum = weights.reduce((total, weight, index) => total + (source.charCodeAt(index) - 48) * weight, 0);
-        const remainder = sum % 11;
-        return remainder < 2 ? 0 : 11 - remainder;
-    };
-    const first = calculate(normalized, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-    const second = calculate(normalized, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-    return Number(normalized[12]) === first && Number(normalized[13]) === second;
-};
 
 const formatCpf = (value) => onlyDigits(value).slice(0, 11)
     .replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
@@ -88,7 +77,6 @@ const updateDocument = () => {
     const normalizedLength = documentInput.value.replace(/[^A-Z0-9]/gi, '').length;
     const complete = normalizedLength === (company ? 14 : 11);
     const valid = complete && (company ? cnpjIsValid(documentInput.value) : cpfIsValid(documentInput.value));
-    documentInput.setCustomValidity(complete && ! valid ? `${company ? 'CNPJ' : 'CPF'} inválido.` : '');
     documentFeedback.textContent = ! complete ? '' : (valid ? 'Dígitos verificadores válidos.' : 'Confira os dígitos verificadores.');
     documentFeedback.classList.toggle('is-valid', valid);
     documentFeedback.classList.toggle('is-invalid', complete && ! valid);
@@ -163,7 +151,11 @@ document.querySelectorAll('[data-media-input]').forEach((input) => {
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.textContent = 'Remover';
-        remove.addEventListener('click', () => { input.value = ''; preview.replaceChildren(); });
+        remove.addEventListener('click', () => {
+            input.value = '';
+            preview.replaceChildren();
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
         preview.append(image, remove);
     });
 });
@@ -189,8 +181,10 @@ const syncGallery = () => {
         image.alt = '';
         image.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
         const label = document.createElement('label');
+        label.dataset.fieldContainer = '';
         label.textContent = `Descrição da foto ${position + 1}`;
         const alt = document.createElement('input');
+        alt.id = `field-gallery_alt-${position}`;
         alt.name = 'gallery_alt[]';
         alt.maxLength = 240;
         alt.required = true;
@@ -225,7 +219,7 @@ const syncGallery = () => {
 };
 
 const addGalleryFiles = (files) => {
-    galleryFiles = [...galleryFiles, ...files.map((file) => ({ file, alt: '' }))].slice(0, 6);
+    galleryFiles = [...galleryFiles, ...files.map((file) => ({ file, alt: '' }))];
     syncGallery();
 };
 galleryInput?.addEventListener('change', () => addGalleryFiles([...galleryInput.files]));
