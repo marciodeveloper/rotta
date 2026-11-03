@@ -124,6 +124,24 @@ function initHeroCarousel() {
 
   let currentIndex = 0;
   let activeLayer = layers[0];
+  let autoplayTimer = null;
+  const autoplayDelay = 7800;
+  const autoplayEnabled = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function clearAutoplay() {
+    if (autoplayTimer === null) return;
+    window.clearTimeout(autoplayTimer);
+    autoplayTimer = null;
+  }
+
+  function scheduleAutoplay() {
+    clearAutoplay();
+    if (!autoplayEnabled) return;
+    autoplayTimer = window.setTimeout(() => {
+      autoplayTimer = null;
+      setSlide((currentIndex + 1) % heroSlides.length, true);
+    }, autoplayDelay);
+  }
 
   const updateMeta = (index) => {
     const slide = heroSlides[index];
@@ -143,7 +161,7 @@ function initHeroCarousel() {
     }
   };
 
-  const setSlide = (index) => {
+  const setSlide = (index, scheduleNext = false) => {
     if (index === currentIndex) return;
     const slide = heroSlides[index];
     const nextLayer = activeLayer === layers[0] ? layers[1] : layers[0];
@@ -160,6 +178,7 @@ function initHeroCarousel() {
       currentIndex = index;
       updateMeta(index);
       nextLayer.onload = null;
+      if (scheduleNext) scheduleAutoplay();
     };
     nextLayer.onload = activate;
     nextLayer.dataset.framing = slide.framing || 'landscape';
@@ -183,13 +202,18 @@ function initHeroCarousel() {
     pagination.addEventListener('click', event => {
       const button = event.target.closest('[data-hero-slide]');
       if (!button) return;
-      setSlide(Number(button.dataset.heroSlide));
+      const index = Number(button.dataset.heroSlide);
+      if (!Number.isInteger(index) || index < 0 || index >= heroSlides.length) return;
+      clearAutoplay();
+      if (index === currentIndex) {
+        scheduleAutoplay();
+        return;
+      }
+      setSlide(index, true);
     });
   }
 
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    window.setInterval(() => setSlide((currentIndex + 1) % heroSlides.length), 7800);
-  }
+  scheduleAutoplay();
 }
 
 function experienceCard(item) {
