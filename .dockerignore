@@ -1,10 +1,16 @@
 .git
 .env
+.env.*
+!.env.example
+.phpunit*
 node_modules
 vendor
 storage/logs/*
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
+storage/framework/testing
+storage/app/private/*
+storage/app/public/*
 public/build
 tests/Browser/screenshots
