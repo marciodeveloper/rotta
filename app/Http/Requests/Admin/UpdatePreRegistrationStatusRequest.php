@@ -14,7 +14,7 @@ class UpdatePreRegistrationStatusRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user('admin')?->is_active === true;
+        return $this->user('admin')?->can('manage-pre-registration', $this->route('preRegistration')) ?? false;
     }
 
     /**
@@ -28,6 +28,16 @@ class UpdatePreRegistrationStatusRequest extends FormRequest
             'status' => ['required', Rule::in(PreRegistration::STATUSES)],
             'status_version' => ['required', 'integer', 'min:1'],
             'reason' => [Rule::requiredIf(fn (): bool => in_array($this->string('status')->toString(), [PreRegistration::STATUS_REJECTED, PreRegistration::STATUS_ARCHIVED], true)), 'nullable', 'string', 'min:10', 'max:500'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'reason.required' => 'Informe uma justificativa para rejeitar ou arquivar o cadastro.',
+            'reason.min' => 'A justificativa deve ter pelo menos 10 caracteres.',
+            'reason.max' => 'A justificativa deve ter no máximo 500 caracteres.',
+            'status_version.required' => 'Recarregue a página para obter a versão atual do cadastro.',
         ];
     }
 }

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminAuditEvent;
-use App\Services\AdminSecondFactorAuthenticator;
 use App\Services\SensitiveHash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,14 +18,15 @@ class ReauthenticateController extends Controller
         return view('admin.reauthenticate');
     }
 
-    public function store(Request $request, AdminSecondFactorAuthenticator $secondFactor, SensitiveHash $hash): RedirectResponse
+    public function store(Request $request, SensitiveHash $hash): RedirectResponse
     {
-        $validated = $request->validate(['password' => ['required', 'string'], 'code' => ['required', 'string', 'max:32']]);
+        $validated = $request->validate(['password' => ['required', 'string', 'max:1024']]);
         $admin = $request->user('admin');
-        if (! Hash::check($validated['password'], $admin->password) || ! $secondFactor->verify($admin, $validated['code'])) {
-            throw ValidationException::withMessages(['code' => 'Não foi possível confirmar sua identidade.']);
+        if (! Hash::check($validated['password'], $admin->password)) {
+            throw ValidationException::withMessages(['password' => 'A senha informada não é válida.']);
         }
-        $request->session()->put('admin_mfa_verified_at', now()->timestamp);
+        $request->session()->regenerate();
+        $request->session()->put('admin_password_confirmed_at', now()->timestamp);
         AdminAuditEvent::query()->create([
             'admin_id' => $admin->id,
             'action' => 'admin.reauthenticated',

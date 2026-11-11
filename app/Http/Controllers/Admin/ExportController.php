@@ -6,15 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ExportPreRegistrationsRequest;
 use App\Models\AdminAuditEvent;
 use App\Models\PreRegistration;
+use App\Services\PreRegistrationFilters;
 use App\Services\SensitiveHash;
-use Illuminate\Database\Eloquent\Builder;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class ExportController extends Controller
 {
-    public function __invoke(ExportPreRegistrationsRequest $request, SensitiveHash $hash): StreamedResponse
+    public function __invoke(ExportPreRegistrationsRequest $request, SensitiveHash $hash, PreRegistrationFilters $filterQuery): StreamedResponse
     {
         $validated = $request->validated();
         $reason = $request->string('reason')->trim()->toString();
@@ -22,6 +22,7 @@ class ExportController extends Controller
             'status' => $validated['status'] ?? null,
             'state' => isset($validated['state']) ? strtoupper($validated['state']) : null,
             'category' => $validated['category'] ?? null,
+            'q' => $validated['q'] ?? null,
         ]);
         $adminId = $request->user('admin')->id;
         $ipHash = $hash->makeFor('ip-address', (string) $request->ip());
@@ -32,7 +33,7 @@ class ExportController extends Controller
             'ip_hash' => $ipHash,
         ]);
 
-        return response()->streamDownload(function () use ($filters, $adminId, $ipHash, $requested): void {
+        return response()->streamDownload(function () use ($filters, $adminId, $ipHash, $requested, $filterQuery): void {
             $stream = fopen('php://output', 'w');
             if ($stream === false) {
                 $this->auditResult($adminId, $ipHash, $requested->id, 'failed', 0);
@@ -47,14 +48,11 @@ class ExportController extends Controller
                     'email_confirmed_at', 'privacy_notice_version', 'created_at',
                 ]);
 
-                PreRegistration::query()
+                $filterQuery->apply(PreRegistration::query(), $filters)
                     ->select([
                         'id', 'applicant_type', 'document_last_four', 'business_name', 'category', 'responsible_name',
                         'email', 'phone', 'city', 'state', 'status', 'email_confirmed_at', 'privacy_notice_version', 'created_at',
                     ])
-                    ->when($filters['status'] ?? null, fn (Builder $query, string $status): Builder => $query->where('status', $status))
-                    ->when($filters['state'] ?? null, fn (Builder $query, string $state): Builder => $query->where('state', $state))
-                    ->when($filters['category'] ?? null, fn (Builder $query, string $category): Builder => $query->where('category', $category))
                     ->orderBy('id')
                     ->lazyById(200)
                     ->each(function (PreRegistration $registration) use ($stream, &$rowCount): void {

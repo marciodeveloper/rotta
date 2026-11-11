@@ -32,17 +32,16 @@ class MfaHardeningTest extends TestCase
         $this->assertFalse(app(AdminSecondFactorAuthenticator::class)->verify($admin, $code));
     }
 
-    public function test_admin_reauthentication_requires_password_and_fresh_second_factor(): void
+    public function test_admin_reauthentication_requires_only_valid_password(): void
     {
-        $totp = app(TotpService::class);
-        $admin = Admin::factory()->create(['totp_secret' => $totp->generateSecret()]);
-        $code = $totp->codeAt($admin->totp_secret, intdiv(now()->timestamp, 30));
+        $admin = Admin::factory()->create();
+        $this->actingAs($admin, 'admin')->post(route('admin.reauthenticate.store'), ['password' => 'invalid'])->assertSessionHasErrors('password');
 
         $response = $this->actingAs($admin, 'admin')->post(route('admin.reauthenticate.store'), [
-            'password' => 'Testing-only-password-2026!', 'code' => $code,
+            'password' => 'Testing-only-password-2026!',
         ]);
 
-        $response->assertRedirect(route('admin.dashboard'))->assertSessionHas('admin_mfa_verified_at');
+        $response->assertRedirect(route('admin.dashboard'))->assertSessionHas('admin_password_confirmed_at');
         $this->assertDatabaseHas('admin_audit_events', ['admin_id' => $admin->id, 'action' => 'admin.reauthenticated']);
     }
 }

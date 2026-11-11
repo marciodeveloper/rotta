@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Models\PreRegistration;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,9 +24,7 @@ class ExportPreRegistrationsRequest extends FormRequest
     {
         return [
             'reason' => ['required', 'string', 'min:20', 'max:500'],
-            'status' => ['nullable', 'string', 'in:'.implode(',', PreRegistration::STATUSES)],
-            'state' => ['nullable', 'string', 'size:2', 'alpha'],
-            'category' => ['nullable', 'string', 'max:100'],
+            ...ListPreRegistrationsRequest::filterRules(),
         ];
     }
 }

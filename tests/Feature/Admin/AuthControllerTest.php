@@ -4,7 +4,6 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Admin;
 use App\Models\AdminAuditEvent;
-use App\Services\TotpService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -13,27 +12,54 @@ class AuthControllerTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_valid_password_requires_mfa_before_authentication(): void
+    public function test_valid_password_authenticates_existing_admin_and_audits_login(): void
     {
         $admin = Admin::factory()->create(['email' => 'admin@example.test', 'password' => Hash::make('Testing-only-password-2026!')]);
+        $this->withSession(['before_login' => 'synthetic']);
+        $previousSession = session()->getId();
 
         $response = $this->post(route('admin.login.store'), ['email' => $admin->email, 'password' => 'Testing-only-password-2026!']);
 
-        $response->assertRedirect(route('admin.mfa.create'))->assertSessionHas('admin_mfa_pending_id', $admin->id);
+        $response->assertRedirect(route('admin.dashboard'))->assertSessionHas('admin_password_confirmed_at', now()->timestamp);
+        $this->assertAuthenticatedAs($admin, 'admin');
+        $this->assertNotSame($previousSession, session()->getId());
+        $this->assertDatabaseHas(AdminAuditEvent::class, ['admin_id' => $admin->id, 'action' => 'admin.login']);
+    }
+
+    public function test_invalid_password_and_inactive_admin_cannot_login(): void
+    {
+        $admin = Admin::factory()->create();
+        $this->post(route('admin.login.store'), ['email' => $admin->email, 'password' => 'invalid'])->assertSessionHasErrors('email');
+        $admin->update(['is_active' => false]);
+        $this->post(route('admin.login.store'), ['email' => $admin->email, 'password' => 'Testing-only-password-2026!'])->assertSessionHasErrors('email');
+        $this->assertGuest('admin');
+        $this->assertDatabaseCount('admin_audit_events', 0);
+    }
+
+    public function test_mfa_routes_are_unavailable_and_logout_invalidates_authentication(): void
+    {
+        $this->get('/admin/mfa')->assertNotFound();
+        $admin = Admin::factory()->create();
+        $this->actingAs($admin, 'admin')->post(route('admin.logout'))->assertRedirect(route('admin.login'));
         $this->assertGuest('admin');
     }
 
-    public function test_valid_mfa_authenticates_pending_active_admin_and_audits_login(): void
+    public function test_provisioning_does_not_require_or_generate_second_factor(): void
     {
-        $this->travelTo('2026-11-01 15:00:00');
-        $admin = Admin::factory()->create(['totp_secret' => 'JBSWY3DPEHPK3PXP']);
-        $code = (new TotpService)->codeAt($admin->totp_secret, intdiv(now()->timestamp, 30));
+        $this->artisan('prelaunch:admin:create', ['email' => 'synthetic-admin@example.invalid', '--name' => 'Operador sintético'])
+            ->expectsQuestion('Password (minimum 14 characters)', 'Testing-only-password-2026!')->assertSuccessful();
+        $admin = Admin::query()->where('email', 'synthetic-admin@example.invalid')->firstOrFail();
+        $this->assertSame('', $admin->totp_secret);
+        $this->assertNull($admin->totp_confirmed_at);
+        $this->assertFalse($admin->can_export);
+        $this->assertDatabaseCount('admin_recovery_codes', 0);
+    }
 
-        $response = $this->withSession(['admin_mfa_pending_id' => $admin->id])->post(route('admin.mfa.store'), ['code' => $code]);
-
-        $response->assertRedirect(route('admin.dashboard'));
-        $response->assertSessionHas('admin_mfa_verified_at', now()->timestamp);
-        $this->assertAuthenticatedAs($admin, 'admin');
-        $this->assertDatabaseHas(AdminAuditEvent::class, ['admin_id' => $admin->id, 'action' => 'admin.login']);
+    public function test_password_login_is_rate_limited(): void
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->post(route('admin.login.store'), ['email' => 'rate-limit@example.invalid', 'password' => 'invalid'])->assertSessionHasErrors('email');
+        }
+        $this->post(route('admin.login.store'), ['email' => 'rate-limit@example.invalid', 'password' => 'invalid'])->assertTooManyRequests();
     }
 }
