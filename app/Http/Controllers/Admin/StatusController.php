@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdatePreRegistrationStatusRequest;
 use App\Models\PreRegistration;
 use App\Services\TransitionPreRegistrationStatus;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class StatusController extends Controller
@@ -13,7 +14,7 @@ class StatusController extends Controller
     /**
      * Handle the incoming request.
      */
-    public function __invoke(UpdatePreRegistrationStatusRequest $request, PreRegistration $preRegistration, TransitionPreRegistrationStatus $transition): RedirectResponse
+    public function __invoke(UpdatePreRegistrationStatusRequest $request, PreRegistration $preRegistration, TransitionPreRegistrationStatus $transition): RedirectResponse|JsonResponse
     {
         $transition->handle(
             $preRegistration,
@@ -23,6 +24,12 @@ class StatusController extends Controller
             $request->integer('status_version'),
             $request->ip(),
         );
+
+        if ($request->expectsJson()) {
+            $request->session()->flash('status', 'Status atualizado com sucesso.');
+
+            return response()->json(['message' => 'Status atualizado com sucesso.']);
+        }
 
         return back()->with('status', 'Status atualizado.');
     }

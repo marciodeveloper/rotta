@@ -2,6 +2,16 @@ import Alpine from '@alpinejs/csp';
 import { installCepLookup } from './cep-lookup';
 import { cnpjIsValid, cpfIsValid, createPreRegistrationValidator } from './pre-registration-validation';
 
+if (document.querySelector('[data-admin-table-shell]')) {
+    import('./admin-table').then(({ installAdminTable }) => installAdminTable()).catch(() => {
+        document.querySelector('[data-table-error]').hidden = false;
+    });
+}
+
+if (document.querySelector('[data-action-dialog]')) {
+    import('./admin-actions').then(({ installAdminActions }) => installAdminActions());
+}
+
 Alpine.data('preRegistrationForm', () => {
     let validator;
 

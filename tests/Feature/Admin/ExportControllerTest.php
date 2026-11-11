@@ -16,22 +16,22 @@ class ExportControllerTest extends TestCase
         $admin = Admin::factory()->create(['can_export' => false]);
 
         $response = $this->actingAs($admin, 'admin')
-            ->withSession(['admin_mfa_verified_at' => now()->timestamp])
+            ->withSession(['admin_password_confirmed_at' => now()->timestamp])
             ->post(route('admin.export'), ['reason' => 'Revisão operacional autorizada do lote.']);
 
         $response->assertForbidden();
         $this->assertDatabaseCount('admin_audit_events', 0);
     }
 
-    public function test_export_permission_without_recent_mfa_is_forbidden(): void
+    public function test_export_permission_without_recent_password_requires_confirmation(): void
     {
         $admin = Admin::factory()->create(['can_export' => true]);
 
         $response = $this->actingAs($admin, 'admin')
-            ->withSession(['admin_mfa_verified_at' => now()->subMinutes(16)->timestamp])
+            ->withSession(['admin_password_confirmed_at' => now()->subMinutes(16)->timestamp])
             ->post(route('admin.export'), ['reason' => 'Revisão operacional autorizada do lote.']);
 
-        $response->assertForbidden();
+        $response->assertRedirect(route('admin.reauthenticate'));
         $this->assertDatabaseCount('admin_audit_events', 0);
     }
 
@@ -40,6 +40,21 @@ class ExportControllerTest extends TestCase
         $admin = Admin::factory()->create(['can_export' => true]);
 
         $this->actingAs($admin, 'admin')->get('/admin/exportar')->assertMethodNotAllowed();
+    }
+
+    public function test_export_respects_text_search_and_other_filters_across_pages(): void
+    {
+        $admin = Admin::factory()->create(['can_export' => true]);
+        $match = PreRegistration::factory()->create(['business_name' => 'Oficina Alvo', 'state' => 'RJ']);
+        $other = PreRegistration::factory()->create(['business_name' => 'Outro negócio', 'state' => 'RJ']);
+        $outside = PreRegistration::factory()->create(['business_name' => 'Oficina Alvo', 'state' => 'SP']);
+        $response = $this->actingAs($admin, 'admin')->withSession(['admin_password_confirmed_at' => now()->timestamp])
+            ->post(route('admin.export'), ['q' => 'Oficina', 'state' => 'RJ', 'reason' => 'Conferência sintética dos resultados filtrados.']);
+        $response->assertOk();
+        $content = $response->streamedContent();
+        $this->assertStringContainsString($match->id, $content);
+        $this->assertStringNotContainsString($other->id, $content);
+        $this->assertStringNotContainsString($outside->id, $content);
     }
 
     public function test_authorized_export_minimizes_fields_sanitizes_control_prefixed_formula_and_audits_result(): void
@@ -52,7 +67,7 @@ class ExportControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($admin, 'admin')
-            ->withSession(['admin_mfa_verified_at' => now()->timestamp])
+            ->withSession(['admin_password_confirmed_at' => now()->timestamp])
             ->post(route('admin.export'), ['reason' => 'Revisão operacional autorizada do lote.']);
 
         $response->assertOk()->assertHeader('X-ROTTA-Contract-Version', '1.1');

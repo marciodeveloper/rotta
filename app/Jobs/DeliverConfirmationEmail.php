@@ -95,6 +95,14 @@ class DeliverConfirmationEmail implements ShouldBeUnique, ShouldQueue
                 return null;
             }
 
+            $message->load('confirmationToken');
+            $token = $message->confirmationToken;
+            if ($token === null || ! $token->is_active || $token->used_at !== null || $token->expires_at->isPast()) {
+                $message->update(['status' => EmailOutboxMessage::STATUS_FAILED, 'claimed_at' => null, 'last_error' => 'confirmation_token_inactive']);
+
+                return null;
+            }
+
             $message->update([
                 'status' => EmailOutboxMessage::STATUS_PROCESSING,
                 'attempts' => $message->attempts + 1,

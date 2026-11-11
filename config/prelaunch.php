@@ -3,7 +3,7 @@
 return [
     'data_pepper' => env('PRELAUNCH_DATA_PEPPER'),
     'confirmation_ttl_minutes' => (int) env('PRELAUNCH_CONFIRMATION_TTL', 60),
-    'admin_export_mfa_ttl_minutes' => (int) env('PRELAUNCH_ADMIN_EXPORT_MFA_TTL', 15),
+    'admin_export_password_ttl_minutes' => (int) env('PRELAUNCH_ADMIN_EXPORT_PASSWORD_TTL', 15),
     'media_disk' => env('PRELAUNCH_MEDIA_DISK', 'prelaunch_media'),
     'media' => [
         'max_pixels' => 16_000_000,

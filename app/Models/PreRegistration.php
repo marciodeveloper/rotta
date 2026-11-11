@@ -25,6 +25,14 @@ class PreRegistration extends Model
     /** @var list<string> */
     public const STATUSES = [self::STATUS_PENDING_EMAIL, self::STATUS_UNDER_REVIEW, self::STATUS_APPROVED, self::STATUS_REJECTED, self::STATUS_ARCHIVED];
 
+    public const STATUS_LABELS = [
+        self::STATUS_PENDING_EMAIL => 'E-mail pendente',
+        self::STATUS_UNDER_REVIEW => 'Em análise',
+        self::STATUS_APPROVED => 'Aprovado',
+        self::STATUS_REJECTED => 'Rejeitado',
+        self::STATUS_ARCHIVED => 'Arquivado',
+    ];
+
     /** @var array<string, list<string>> */
     public const ALLOWED_TRANSITIONS = [
         self::STATUS_PENDING_EMAIL => [],

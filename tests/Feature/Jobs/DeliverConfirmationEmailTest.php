@@ -65,6 +65,20 @@ class DeliverConfirmationEmailTest extends TestCase
 
         Queue::assertPushed(DeliverConfirmationEmail::class, fn (DeliverConfirmationEmail $job): bool => $job->outboxId === $outbox->id);
     }
+
+    public function test_queued_message_with_superseded_token_is_not_sent(): void
+    {
+        $registration = PreRegistration::factory()->create();
+        $token = EmailConfirmationToken::factory()->for($registration)->create(['is_active' => false]);
+        $outbox = EmailOutboxMessage::query()->create([
+            'pre_registration_id' => $registration->id, 'email_confirmation_token_id' => $token->id,
+            'confirmation_token' => str_repeat('x', 43), 'status' => 'pending', 'available_at' => now(),
+        ]);
+        $sender = new RecoveringConfirmationMailSender;
+        (new DeliverConfirmationEmail($outbox->id))->handle($sender);
+        $this->assertSame(0, $sender->calls);
+        $this->assertDatabaseHas('email_outbox_messages', ['id' => $outbox->id, 'status' => 'failed', 'last_error' => 'confirmation_token_inactive']);
+    }
 }
 
 class RecoveringConfirmationMailSender implements ConfirmationMailSender

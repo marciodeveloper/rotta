@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Contracts\CepLookup;
 use App\Contracts\ConfirmationMailSender;
 use App\Contracts\TurnstileVerifier;
+use App\Models\Admin;
+use App\Models\PreRegistration;
 use App\Services\CloudflareTurnstileVerifier;
 use App\Services\LaravelConfirmationMailSender;
 use App\Services\ViaCepLookup;
@@ -35,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::preventLazyLoading(! $this->app->isProduction());
         Gate::define('export-pre-registrations', fn ($admin): bool => $admin->is_active && $admin->can_export);
+        Gate::define('view-pre-registration', fn (Admin $admin, PreRegistration $registration): bool => $admin->is_active);
+        Gate::define('manage-pre-registration', fn (Admin $admin, PreRegistration $registration): bool => $admin->is_active);
 
         RateLimiter::for('pre-registration', fn (Request $request): Limit => Limit::perHour(5)->by($request->ip()));
         RateLimiter::for('confirmation', fn (Request $request): Limit => Limit::perMinute(20)->by($request->ip()));
@@ -43,9 +47,18 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('admin-login', fn (Request $request): Limit => Limit::perMinute(5)->by(
             hash('sha256', Str::lower($request->string('email')->toString()).'|'.$request->ip()),
         ));
-        RateLimiter::for('admin-mfa', fn (Request $request): Limit => Limit::perMinute(5)->by(
-            hash('sha256', (string) $request->session()->get('admin_mfa_pending_id').'|'.$request->ip()),
+        RateLimiter::for('admin-reauthenticate', fn (Request $request): Limit => Limit::perMinute(5)->by(
+            hash('sha256', (string) $request->user('admin')?->id.'|'.$request->ip()),
         ));
         RateLimiter::for('admin-export', fn (Request $request): Limit => Limit::perHour(5)->by((string) $request->user('admin')?->id));
+        RateLimiter::for('admin-confirmation-resend', function (Request $request): array {
+            $registration = $request->route('preRegistration');
+            $id = $registration instanceof PreRegistration ? $registration->id : (string) $registration;
+
+            return [
+                Limit::perMinute(1)->by('admin-resend:'.$request->user('admin')?->id.':'.$id),
+                Limit::perHour(3)->by('registration-resend:'.$id),
+            ];
+        });
     }
 }

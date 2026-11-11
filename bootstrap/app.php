@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureActiveAdmin;
-use App\Http\Middleware\EnsureRecentAdminMfa;
+use App\Http\Middleware\EnsureRecentAdminPassword;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeaders::class);
         $middleware->alias([
             'active.admin' => EnsureActiveAdmin::class,
-            'recent.admin.mfa' => EnsureRecentAdminMfa::class,
+            'recent.admin.password' => EnsureRecentAdminPassword::class,
         ]);
         $middleware->redirectGuestsTo(fn (): string => route('admin.login'));
     })
