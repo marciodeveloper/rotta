@@ -2,7 +2,7 @@ import { createTable, getCoreRowModel, functionalUpdate } from '@tanstack/table-
 
 export const columnIds = ['business_name', 'category', 'city', 'state', 'status', 'created_at'];
 
-export function tableUrl(current, { sorting, pagination, visibility } = {}) {
+export function tableUrl(current, { sorting, pagination, visibility } = {}, columns = columnIds) {
     const url = new URL(current);
     if (sorting) {
         url.searchParams.set('sort', sorting[0]?.id ?? 'created_at');
@@ -15,7 +15,7 @@ export function tableUrl(current, { sorting, pagination, visibility } = {}) {
     }
     if (visibility) {
         [...url.searchParams.keys()].filter((key) => key === 'columns' || key.startsWith('columns[')).forEach((key) => url.searchParams.delete(key));
-        columnIds.filter((key) => key === 'business_name' || visibility[key] !== false).forEach((key) => url.searchParams.append('columns[]', key));
+        columns.filter((key) => key === 'business_name' || visibility[key] !== false).forEach((key) => url.searchParams.append('columns[]', key));
     }
     return url;
 }
@@ -23,6 +23,7 @@ export function tableUrl(current, { sorting, pagination, visibility } = {}) {
 export function installAdminTable(root = document) {
     const shell = root.querySelector('[data-admin-table-shell]');
     if (!shell) return;
+    const columns = shell.dataset.tableColumns ? JSON.parse(shell.dataset.tableColumns) : columnIds;
     let table;
     let controller;
     let retryUrl;
@@ -37,14 +38,14 @@ export function installAdminTable(root = document) {
     const initialize = () => {
         const container = shell.querySelector('[data-table-container]');
         const rows = [...container.querySelectorAll('[data-record-row]')];
-        const data = rows.map((row) => Object.fromEntries(columnIds.map((id) => [id, row.querySelector(`[data-column="${id}"]`)?.textContent.trim()])));
+        const data = rows.map((row) => Object.fromEntries(columns.map((id) => [id, row.querySelector(`[data-column="${id}"]`)?.textContent.trim()])));
         let state = {
             sorting: [{ id: container.dataset.sort, desc: container.dataset.direction === 'desc' }],
             pagination: { pageIndex: Number(container.dataset.page) - 1, pageSize: Number(container.dataset.pageSize) },
             columnVisibility: Object.fromEntries([...shell.querySelectorAll('[data-column-toggle]')].map((input) => [input.dataset.columnToggle, input.checked])),
         };
         table = createTable({
-            data, columns: columnIds.map((id) => ({ accessorKey: id, enableHiding: id !== 'business_name' })),
+            data, columns: columns.map((id) => ({ accessorKey: id, enableHiding: id !== 'business_name' })),
             getCoreRowModel: getCoreRowModel(), manualPagination: true, manualSorting: true, manualFiltering: true,
             rowCount: Number(container.dataset.total), enableSortingRemoval: false,
             state,
@@ -54,14 +55,14 @@ export function installAdminTable(root = document) {
                 table.setOptions((options) => ({ ...options, state }));
                 if (previous.columnVisibility !== state.columnVisibility) {
                     applyVisibility();
-                    const url = tableUrl(window.location.href, { visibility: state.columnVisibility });
+                    const url = tableUrl(window.location.href, { visibility: state.columnVisibility }, columns);
                     history.replaceState(null, '', url);
                     shell.querySelectorAll('.crm-record-link, .crm-context-link, [data-table-pagination] a, [data-sort-column]').forEach((link) => {
-                        link.href = tableUrl(link.href, { visibility: state.columnVisibility });
+                        link.href = tableUrl(link.href, { visibility: state.columnVisibility }, columns);
                     });
                     const form = shell.querySelector('[data-table-filters]');
                     form.querySelectorAll('[name="columns[]"]').forEach((input) => input.remove());
-                    columnIds.filter((id) => state.columnVisibility[id] !== false).forEach((id) => {
+                    columns.filter((id) => state.columnVisibility[id] !== false).forEach((id) => {
                         const input = document.createElement('input');
                         input.type = 'hidden'; input.name = 'columns[]'; input.value = id; form.append(input);
                     });

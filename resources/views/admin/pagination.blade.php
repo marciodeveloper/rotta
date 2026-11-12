@@ -1,5 +1,5 @@
 @if ($paginator->hasPages())
-<nav class="crm-page-nav" aria-label="Paginação dos pré-cadastros">
+<nav class="crm-page-nav" aria-label="Paginação dos resultados">
     <span>Exibindo {{ $paginator->firstItem() }}–{{ $paginator->lastItem() }} de {{ $paginator->total() }} resultados</span>
     <div>
         @if($paginator->onFirstPage())<span aria-disabled="true">Anterior</span>@else<a href="{{ $paginator->previousPageUrl() }}" rel="prev">Anterior</a>@endif

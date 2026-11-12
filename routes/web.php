@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PreRegistrationController as AdminPreRegistrationController;
+use App\Http\Controllers\Admin\ProspectController;
 use App\Http\Controllers\Admin\ReauthenticateController;
 use App\Http\Controllers\Admin\ResendConfirmationController as AdminResendConfirmationController;
 use App\Http\Controllers\Admin\StatusController;
@@ -38,6 +39,16 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
     });
 
     Route::middleware(['auth:admin', 'active.admin'])->group(function (): void {
+        Route::prefix('prospeccao')->name('prospects.')->controller(ProspectController::class)->group(function (): void {
+            Route::get('/', 'index')->name('index');
+            Route::get('/novo', 'create')->name('create');
+            Route::post('/', 'store')->middleware('throttle:prospect-write')->name('store');
+            Route::get('/{prospect}', 'show')->whereUuid('prospect')->name('show');
+            Route::get('/{prospect}/editar', 'edit')->whereUuid('prospect')->name('edit');
+            Route::patch('/{prospect}', 'update')->whereUuid('prospect')->middleware('throttle:prospect-write')->name('update');
+            Route::post('/{prospect}/contato', 'contact')->whereUuid('prospect')->middleware('throttle:prospect-write')->name('contact');
+            Route::post('/{prospect}/origens', 'source')->whereUuid('prospect')->middleware('throttle:prospect-write')->name('sources.store');
+        });
         Route::get('/', DashboardController::class)->name('dashboard');
         Route::get('/pre-cadastros/{preRegistration}', [AdminPreRegistrationController::class, 'show'])->whereUuid('preRegistration')->name('pre-registrations.show');
         Route::get('/pre-cadastros/{preRegistration}/midias/{media}', [MediaController::class, 'show'])->whereUuid(['preRegistration', 'media'])->name('media.show');

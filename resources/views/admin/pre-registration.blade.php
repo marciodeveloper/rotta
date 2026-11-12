@@ -2,6 +2,7 @@
 @section('title', $registration->business_name)
 @section('content')
 <article class="admin-shell crm-detail">
+    <x-admin-navigation />
     <a class="crm-back" href="{{ route('admin.dashboard', $listContext) }}">← Voltar aos resultados</a>
     <header class="admin-heading"><div><div class="eyebrow"><span></span> Ficha do interessado</div><h1>{{ $registration->business_name }}</h1><p>{{ $registration->category }} · {{ $registration->city }}/{{ $registration->state }}</p></div><span class="crm-badge" data-status="{{ $registration->status }}">{{ \App\Models\PreRegistration::STATUS_LABELS[$registration->status] }}</span></header>
     <x-record-actions :registration="$registration" :context="$listContext" mode="detail" />
