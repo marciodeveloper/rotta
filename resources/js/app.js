@@ -1,4 +1,6 @@
 import Alpine from '@alpinejs/csp';
+import { installProspectForms } from './prospect-forms';
+installProspectForms();
 import { installCepLookup } from './cep-lookup';
 import { cnpjIsValid, cpfIsValid, createPreRegistrationValidator } from './pre-registration-validation';
 

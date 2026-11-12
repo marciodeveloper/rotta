@@ -7,6 +7,8 @@ use App\Contracts\ConfirmationMailSender;
 use App\Contracts\TurnstileVerifier;
 use App\Models\Admin;
 use App\Models\PreRegistration;
+use App\Models\Prospect;
+use App\Policies\ProspectPolicy;
 use App\Services\CloudflareTurnstileVerifier;
 use App\Services\LaravelConfirmationMailSender;
 use App\Services\ViaCepLookup;
@@ -36,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::preventLazyLoading(! $this->app->isProduction());
+        Gate::policy(Prospect::class, ProspectPolicy::class);
+        RateLimiter::for('prospect-write', fn (Request $request): Limit => Limit::perMinute(30)->by((string) $request->user('admin')?->id));
         Gate::define('export-pre-registrations', fn ($admin): bool => $admin->is_active && $admin->can_export);
         Gate::define('view-pre-registration', fn (Admin $admin, PreRegistration $registration): bool => $admin->is_active);
         Gate::define('manage-pre-registration', fn (Admin $admin, PreRegistration $registration): bool => $admin->is_active);

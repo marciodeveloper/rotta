@@ -14,6 +14,7 @@ class AuthControllerTest extends TestCase
 
     public function test_valid_password_authenticates_existing_admin_and_audits_login(): void
     {
+        $this->freezeTime();
         $admin = Admin::factory()->create(['email' => 'admin@example.test', 'password' => Hash::make('Testing-only-password-2026!')]);
         $this->withSession(['before_login' => 'synthetic']);
         $previousSession = session()->getId();

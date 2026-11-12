@@ -2,6 +2,7 @@
 @section('title', 'Pré-cadastros')
 @section('content')
 <section class="admin-shell" data-admin-table-shell>
+    <x-admin-navigation />
     <header class="admin-heading">
         <div><div class="eyebrow"><span></span> CRM ROTTA</div><h1>Pré-cadastros</h1><p>Encontre interessados e acompanhe cada análise.</p></div>
         <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="button button-secondary" type="submit">Sair</button></form>
