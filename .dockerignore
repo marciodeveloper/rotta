@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 .phpunit*
+bootstrap/cache/*.php
 node_modules
 vendor
 storage/logs/*

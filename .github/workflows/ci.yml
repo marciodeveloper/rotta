@@ -69,6 +69,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends --yes postgresql-client
 
+      - name: Prepare isolated testing environment
+        run: touch .env
+
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
