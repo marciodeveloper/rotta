@@ -3,17 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\CreateProspectFromReferenceRequest;
 use App\Http\Requests\Admin\ListProspectsRequest;
 use App\Http\Requests\Admin\ProspectContactRequest;
 use App\Http\Requests\Admin\SaveProspectRequest;
 use App\Http\Requests\Admin\StoreProspectSourceRequest;
 use App\Models\Admin;
+use App\Models\GooglePlaceReference;
 use App\Models\Prospect;
 use App\Services\AddProspectSource;
 use App\Services\CreateProspect;
+use App\Services\CreateProspectFromPlaceReference;
 use App\Services\DetectProspectDuplicates;
 use App\Services\ManageProspectContact;
 use App\Services\NormalizeProspect;
+use App\Services\SavedPlaceReferences;
 use App\Services\UpdateProspect;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -68,7 +72,29 @@ class ProspectController extends Controller
         return $this->form($request, $prospect, $duplicates, $normalize);
     }
 
-    private function form(ListProspectsRequest $request, Prospect $prospect, DetectProspectDuplicates $duplicates, NormalizeProspect $normalize): View
+    public function createFromReference(ListProspectsRequest $request, GooglePlaceReference $reference, DetectProspectDuplicates $duplicates, NormalizeProspect $normalize): View|RedirectResponse
+    {
+        Gate::authorize('create', Prospect::class);
+        Gate::authorize('useForProspect', $reference);
+        if ($reference->prospect_id) {
+            return redirect()->route('admin.prospects.show', ['prospect' => $reference->prospect_id, ...$this->explorerParams($request)]);
+        }
+
+        return $this->form($request, new Prospect, $duplicates, $normalize, $reference);
+    }
+
+    public function storeFromReference(CreateProspectFromReferenceRequest $request, GooglePlaceReference $reference, CreateProspectFromPlaceReference $create): RedirectResponse
+    {
+        try {
+            $prospect = $create->handle($reference, $request->user('admin'), $request->validated());
+        } catch (ValidationException $exception) {
+            throw $exception->redirectTo(route('admin.explorer.references.create', ['reference' => $reference, ...$this->explorerParams($request)]));
+        }
+
+        return redirect()->route('admin.prospects.show', ['prospect' => $prospect, ...$this->explorerParams($request)])->with('status', 'Prospect cadastrado. Dados declarados e fontes verificadas registrados separadamente; referência Google vinculada.');
+    }
+
+    private function form(ListProspectsRequest $request, Prospect $prospect, DetectProspectDuplicates $duplicates, NormalizeProspect $normalize, ?GooglePlaceReference $googleReference = null): View
     {
         $candidates = collect();
         if ($request->session()->hasOldInput('business_name')) {
@@ -78,7 +104,7 @@ class ProspectController extends Controller
             }
         }
 
-        return view('admin.prospects.form', ['prospect' => $prospect, 'filters' => $request->validated(), 'admins' => $this->admins(), 'candidates' => $candidates, 'submissionToken' => (string) Str::uuid()]);
+        return view('admin.prospects.form', ['prospect' => $prospect, 'filters' => $request->validated(), 'admins' => $this->admins(), 'candidates' => $candidates, 'submissionToken' => (string) Str::uuid(), 'googleReference' => $googleReference, 'explorerParams' => $googleReference ? $this->explorerParams($request) : [], 'explorerReturn' => $googleReference ? route('admin.explorer.index', SavedPlaceReferences::returnContext($request->query())) : null]);
     }
 
     public function store(SaveProspectRequest $request, CreateProspect $create): RedirectResponse
@@ -111,7 +137,7 @@ class ProspectController extends Controller
         $prospect->load(['assignee:id,name']);
         $confirmers = Admin::whereIn('id', collect($prospect->confirmed_fields ?? [])->pluck('admin_id'))->pluck('name', 'id');
 
-        return view('admin.prospects.show', ['prospect' => $prospect, 'filters' => $request->validated(), 'sources' => $prospect->sources()->with('author:id,name')->latest()->paginate(10, ['*'], 'sources_page')->withQueryString(), 'activities' => $prospect->activities()->with('admin:id,name')->orderByDesc('created_at')->orderByDesc('id')->paginate(20, ['*'], 'activities_page')->withQueryString(), 'confirmers' => $confirmers, 'submissionToken' => (string) Str::uuid()]);
+        return view('admin.prospects.show', ['prospect' => $prospect, 'filters' => $request->validated(), 'sources' => $prospect->sources()->with('author:id,name')->latest()->paginate(10, ['*'], 'sources_page')->withQueryString(), 'activities' => $prospect->activities()->with('admin:id,name')->orderByDesc('created_at')->orderByDesc('id')->paginate(20, ['*'], 'activities_page')->withQueryString(), 'confirmers' => $confirmers, 'submissionToken' => (string) Str::uuid(), 'explorerReturn' => $this->explorerParams($request) ? route('admin.explorer.index', SavedPlaceReferences::returnContext($request->query())) : null, 'googleReferences' => $prospect->googlePlaceReferences()->orderByDesc('created_at')->paginate(10, ['*'], 'references_page')->withQueryString()]);
     }
 
     public function contact(ProspectContactRequest $request, Prospect $prospect, ManageProspectContact $manage): RedirectResponse
@@ -141,6 +167,16 @@ class ProspectController extends Controller
     private function context(Request $request): array
     {
         return Validator::make($request->query(), ListProspectsRequest::filterRules())->validate();
+    }
+
+    private function explorerParams(Request $request): array
+    {
+        $params = [];
+        foreach (SavedPlaceReferences::returnContext($request->query()) as $key => $value) {
+            $params['explorer_'.$key] = $value;
+        }
+
+        return $params;
     }
 
     private function admins(): Collection

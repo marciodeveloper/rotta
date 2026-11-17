@@ -32,6 +32,11 @@ class Prospect extends Model
         return $this->hasMany(ProspectSource::class);
     }
 
+    public function googlePlaceReferences(): HasMany
+    {
+        return $this->hasMany(GooglePlaceReference::class);
+    }
+
     public function identifiers(): HasMany
     {
         return $this->hasMany(ProspectIdentifier::class);

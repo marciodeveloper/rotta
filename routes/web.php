@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BusinessExplorerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\MediaController;
@@ -39,6 +40,17 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
     });
 
     Route::middleware(['auth:admin', 'active.admin'])->group(function (): void {
+        Route::prefix('prospeccao/explorador')->name('explorer.')->group(function (): void {
+            Route::get('/', [BusinessExplorerController::class, 'index'])->name('index');
+            Route::post('/pesquisar', [BusinessExplorerController::class, 'search'])->middleware('throttle:prospect-write')->name('search');
+            Route::post('/detalhes', [BusinessExplorerController::class, 'details'])->middleware('throttle:prospect-write')->name('details');
+            Route::post('/estado-referencias', [BusinessExplorerController::class, 'metadata'])->middleware('throttle:prospect-write')->name('metadata');
+            Route::post('/referencias', [BusinessExplorerController::class, 'storeReference'])->middleware('throttle:prospect-write')->name('references.store');
+            Route::post('/referencias/{reference}/preencher-google', [BusinessExplorerController::class, 'googleDraft'])->whereUuid('reference')->middleware('throttle:prospect-write')->name('references.google-draft');
+            Route::post('/referencias/{reference}/enriquecer', [BusinessExplorerController::class, 'enrich'])->whereUuid('reference')->middleware('throttle:prospect-write')->name('references.enrich');
+            Route::get('/referencias/{reference}/cadastrar', [ProspectController::class, 'createFromReference'])->whereUuid('reference')->name('references.create');
+            Route::post('/referencias/{reference}/cadastrar', [ProspectController::class, 'storeFromReference'])->whereUuid('reference')->middleware('throttle:prospect-write')->name('references.prospects.store');
+        });
         Route::prefix('prospeccao')->name('prospects.')->controller(ProspectController::class)->group(function (): void {
             Route::get('/', 'index')->name('index');
             Route::get('/novo', 'create')->name('create');

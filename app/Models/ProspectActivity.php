@@ -14,7 +14,7 @@ class ProspectActivity extends Model
 
     public const DECISION_LABELS = ['change' => 'Alteração de campo confirmado', 'duplicate' => 'Aceitação de possível duplicidade', 'blocked_match' => 'Revisão de correspondência com contato bloqueado', 'contact' => 'Bloqueio ou desbloqueio de contato'];
 
-    public const LABELS = ['created' => 'Cadastro criado', 'updated' => 'Dados atualizados', 'source_added' => 'Origem adicionada', 'contact_blocked' => 'Contato bloqueado', 'contact_unblocked' => 'Contato desbloqueado'];
+    public const LABELS = ['created' => 'Cadastro criado', 'updated' => 'Dados atualizados', 'source_added' => 'Origem adicionada', 'contact_blocked' => 'Contato bloqueado', 'contact_unblocked' => 'Contato desbloqueado', 'google_reference_linked' => 'Referência Google vinculada'];
 
     protected $fillable = ['prospect_id', 'admin_id', 'event', 'reason', 'metadata', 'decision_reasons'];
 

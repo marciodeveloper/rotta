@@ -29,10 +29,14 @@ class ProspectIdentifierMigrationTest extends TestCase
         ]);
         $activity = $prospect->activities()->create(['admin_id' => $admin->id, 'event' => 'created', 'reason' => 'Justificativa legada preservada.', 'metadata' => []]);
         $rawEmail = DB::table('prospects')->where('id', $prospect->id)->value('email');
-        $this->artisan('migrate:rollback', ['--step' => 1, '--force' => true])->assertSuccessful();
+        // Isolate this historical migration; newer modules may add later migrations.
+        $migration = require database_path('migrations/2026_11_12_033611_preserve_prospect_identifiers_and_decision_reasons.php');
+        $migration->down();
         $this->assertFalse(Schema::hasTable('prospect_identifiers'));
+        $this->assertFalse(Schema::hasColumn('prospect_activities', 'decision_reasons'));
         $this->assertDatabaseHas('prospects', ['id' => $prospect->id]);
-        $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+        $migration->up();
+        $this->assertTrue(Schema::hasColumn('prospect_activities', 'decision_reasons'));
         $this->assertSame($rawEmail, DB::table('prospects')->where('id', $prospect->id)->value('email'));
         $this->assertSame(3, $prospect->identifiers()->count());
         $this->assertSame('Justificativa legada preservada.', $activity->fresh()->reason);

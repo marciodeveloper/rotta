@@ -2,14 +2,18 @@
 
 namespace App\Providers;
 
+use App\Contracts\BusinessSearchProvider;
 use App\Contracts\CepLookup;
 use App\Contracts\ConfirmationMailSender;
 use App\Contracts\TurnstileVerifier;
 use App\Models\Admin;
+use App\Models\GooglePlaceReference;
 use App\Models\PreRegistration;
 use App\Models\Prospect;
+use App\Policies\GooglePlaceReferencePolicy;
 use App\Policies\ProspectPolicy;
 use App\Services\CloudflareTurnstileVerifier;
+use App\Services\GooglePlacesProvider;
 use App\Services\LaravelConfirmationMailSender;
 use App\Services\ViaCepLookup;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -29,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(TurnstileVerifier::class, CloudflareTurnstileVerifier::class);
         $this->app->bind(CepLookup::class, ViaCepLookup::class);
+        $this->app->bind(BusinessSearchProvider::class, GooglePlacesProvider::class);
         $this->app->bind(ConfirmationMailSender::class, LaravelConfirmationMailSender::class);
     }
 
@@ -39,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::preventLazyLoading(! $this->app->isProduction());
         Gate::policy(Prospect::class, ProspectPolicy::class);
+        Gate::policy(GooglePlaceReference::class, GooglePlaceReferencePolicy::class);
         RateLimiter::for('prospect-write', fn (Request $request): Limit => Limit::perMinute(30)->by((string) $request->user('admin')?->id));
         Gate::define('export-pre-registrations', fn ($admin): bool => $admin->is_active && $admin->can_export);
         Gate::define('view-pre-registration', fn (Admin $admin, PreRegistration $registration): bool => $admin->is_active);
