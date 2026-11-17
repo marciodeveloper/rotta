@@ -1,8 +1,15 @@
 import Alpine from '@alpinejs/csp';
 import { installProspectForms } from './prospect-forms';
 installProspectForms();
+if (document.querySelector('[data-assisted-reference]')) {
+    import('./assisted-prospect').then(({ installAssistedProspect }) => installAssistedProspect());
+}
 import { installCepLookup } from './cep-lookup';
 import { cnpjIsValid, cpfIsValid, createPreRegistrationValidator } from './pre-registration-validation';
+
+if (document.querySelector('[data-business-explorer]')) {
+    import('./business-explorer').then(({ installBusinessExplorer }) => installBusinessExplorer());
+}
 
 if (document.querySelector('[data-admin-table-shell]')) {
     import('./admin-table').then(({ installAdminTable }) => installAdminTable()).catch(() => {
