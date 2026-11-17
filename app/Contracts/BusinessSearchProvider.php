@@ -11,4 +11,7 @@ interface BusinessSearchProvider
 
     /** @return array Transient display data; only the Place ID is eligible for storage. */
     public function details(string $placeId, bool $enterprise = false): array;
+
+    /** @return array Transient reputation/summary, never stored in CRM or context tokens. */
+    public function intelligence(string $placeId, bool $summary = false): array;
 }

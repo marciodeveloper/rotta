@@ -6,6 +6,7 @@ use App\Contracts\BusinessSearchProvider;
 use App\Exceptions\PlacesUnavailable;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PlaceDetailsRequest;
+use App\Http\Requests\Admin\PlaceIntelligenceRequest;
 use App\Http\Requests\Admin\SavePlaceReferenceRequest;
 use App\Http\Requests\Admin\SearchBusinessesRequest;
 use App\Models\GooglePlaceReference;
@@ -50,6 +51,11 @@ class BusinessExplorerController extends Controller
     public function details(PlaceDetailsRequest $request, BusinessExplorer $explorer): JsonResponse
     {
         return $this->respond(fn () => ['place' => $explorer->details($request->user('admin'), $request->validated())]);
+    }
+
+    public function intelligence(PlaceIntelligenceRequest $request, BusinessExplorer $explorer): JsonResponse
+    {
+        return $this->respond(fn () => ['intelligence' => $explorer->intelligence($request->user('admin'), $request->validated())]);
     }
 
     public function googleDraft(Request $request, GooglePlaceReference $reference, BusinessExplorer $explorer): JsonResponse

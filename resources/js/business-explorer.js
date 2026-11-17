@@ -1,30 +1,8 @@
 import { createTable, getCoreRowModel } from '@tanstack/table-core';
 
-export async function explorerRequest(fetcher, url, payload, csrf) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
-    let response;
-    try {
-    try { response = await fetcher(url, {
-        method: 'POST', credentials: 'same-origin', cache: 'no-store',
-        signal: controller.signal,
-        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrf },
-        body: JSON.stringify(payload),
-    }); } catch (exception) {
-        if (exception.name === 'AbortError') throw new Error('A consulta demorou mais que o esperado. Tente novamente.');
-        throw new Error('Não foi possível conectar ao servidor. Verifique a conexão e tente novamente.');
-    }
-    if (response.redirected) throw new Error('Sua sessão expirou. Recarregue a página e entre novamente.');
-    let body;
-    try { body = await response.json(); } catch (exception) {if(exception.name==='AbortError')throw new Error('A consulta demorou mais que o esperado. Sua pesquisa foi preservada.');throw new Error('Não foi possível interpretar a resposta. Tente novamente.');}
-    if (!response.ok) {
-        const fieldError = Object.values(body.errors ?? {}).flat().find((message) => typeof message === 'string');
-        const exception = new Error(fieldError ?? body.message ?? 'Não foi possível concluir a operação. Tente novamente.');
-        exception.fields = Object.keys(body.errors ?? {});if(typeof body.correlation_id==='string'&&/^[a-f0-9-]{36}$/.test(body.correlation_id))exception.correlationId=body.correlation_id;throw exception;
-    }
-    return body;
-    } finally { clearTimeout(timeout); }
-}
+import { explorerRequest } from './business-explorer-request.js';
+export { explorerRequest } from './business-explorer-request.js';
+import { setIntelligenceContext, renderMapsActions } from './commercial-intelligence.js';
 
 export class ExplorerPageHistory {
     constructor() { this.reset(''); }
@@ -139,9 +117,8 @@ export function installBusinessExplorer(root = document, fetcher = window.fetch.
         const { place } = await explorerRequest(fetcher, shell.dataset.detailsUrl, payload, csrf);
         visualNames.remember(place);applyVisualNames();
         detail.replaceChildren(text('h3', place.name || 'Nome não informado'), text('p', place.address || 'Endereço não informado'), text('p', place.category || 'Categoria não informada'), text('code', place.place_id, 'break-all'), attributions(place));
-        const actions = document.createElement('div'); actions.className = 'flex flex-wrap gap-4 mt-4';
-        if (place.maps_url) actions.append(link('Abrir no Google Maps', place.maps_url, true));
-        detail.append(actions, text('h3', 'CRM ROTTA · dados internos', 'mt-6'), crm(place));
+        setIntelligenceContext(dialog.querySelector('[data-commercial-intelligence]'), place, payload);
+        detail.append(text('h3', 'CRM ROTTA · dados internos', 'mt-6'), crm(place));
         invoker = source; if (!dialog.open) dialog.showModal();
         status.textContent = 'Detalhes carregados. Os dados do Google permanecem temporários.';
     });
@@ -160,7 +137,8 @@ export function installBusinessExplorer(root = document, fetcher = window.fetch.
             const actions = document.createElement('td'); actions.className = 'crm-actions-column';
             const controls = document.createElement('div'); controls.className = 'explorer-actions';
             controls.append(button('Ver detalhes', (item, source) => showDetails({ token: item.token }, source), place));
-            if (place.maps_url) controls.append(link('Google Maps ↗', place.maps_url, true));
+            const location = document.createElement('details');location.append(text('summary','Localização e fotos'));
+            const mapControls = document.createElement('div');mapControls.className='flex flex-wrap gap-2';renderMapsActions(mapControls, place);location.append(mapControls);controls.append(location);
             if (place.linked_prospect) controls.append(link('Abrir ficha', place.linked_prospect.url));
             else if (place.reference) { const start = link('Iniciar cadastro', place.reference.create_url); start.dataset.startProspect = ''; controls.append(start); }
             else controls.append(button('Salvar referência para revisão', save, place));

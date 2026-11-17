@@ -43,6 +43,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::prefix('prospeccao/explorador')->name('explorer.')->group(function (): void {
             Route::get('/', [BusinessExplorerController::class, 'index'])->name('index');
             Route::post('/pesquisar', [BusinessExplorerController::class, 'search'])->middleware('throttle:prospect-write')->name('search');
+            Route::post('/inteligencia', [BusinessExplorerController::class, 'intelligence'])->middleware('throttle:prospect-write')->name('intelligence');
             Route::post('/detalhes', [BusinessExplorerController::class, 'details'])->middleware('throttle:prospect-write')->name('details');
             Route::post('/estado-referencias', [BusinessExplorerController::class, 'metadata'])->middleware('throttle:prospect-write')->name('metadata');
             Route::post('/referencias', [BusinessExplorerController::class, 'storeReference'])->middleware('throttle:prospect-write')->name('references.store');

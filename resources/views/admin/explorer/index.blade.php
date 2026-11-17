@@ -67,7 +67,7 @@
     <dialog class="m-auto w-[calc(100%-2rem)] max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-stone-300 bg-[#fffaf2] p-6 backdrop:bg-black/50" data-explorer-dialog aria-labelledby="place-detail-title">
         <div class="flex flex-wrap items-center justify-between gap-4 mb-4"><h2 id="place-detail-title">Detalhes do estabelecimento</h2><button type="button" class="button button-secondary" data-explorer-close>Fechar</button></div>
         <x-google-maps-attribution />
-        <div data-explorer-detail></div>
+        <div data-explorer-detail></div><x-business-intelligence />
     </dialog>
 </section>
 @endsection
