@@ -45,6 +45,20 @@ class BusinessExplorer
         return $this->withImportToken($admin, $this->enrich($admin, [$place])[0]);
     }
 
+    public function intelligence(Admin $admin, array $input): array
+    {
+        Gate::forUser($admin)->authorize('viewAny', GooglePlaceReference::class);
+        $summary = $input['mode'] === 'summary';
+        if (! config('business_explorer.enterprise_enabled') || ! config('business_explorer.reputation_enabled') || ($summary && ! config('business_explorer.review_summary_enabled'))) {
+            throw new PlacesUnavailable('Esta consulta opcional está desabilitada. Solicite a habilitação ao administrador.', 422);
+        }
+        $placeId = isset($input['reference_id'])
+            ? GooglePlaceReference::findOrFail($input['reference_id'])->place_id
+            : $this->context->read($admin, 'place', $input['token'])['place_id'];
+
+        return $this->call($admin, $summary ? 'review_summary' : 'reputation', fn () => $this->provider->intelligence($placeId, $summary));
+    }
+
     public function enrichmentDetails(Admin $admin, GooglePlaceReference $reference, bool $enterprise): array
     {
         Gate::forUser($admin)->authorize('useForProspect', $reference);

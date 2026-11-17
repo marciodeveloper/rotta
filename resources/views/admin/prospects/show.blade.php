@@ -11,10 +11,23 @@
     <header class="admin-heading"><div><div class="eyebrow"><span></span> Ficha do prospect</div><h1>{{ $prospect->business_name }}</h1><p>{{ $prospect->city }}/{{ $prospect->state }} · Identificado</p></div>@can('update',$prospect)<a class="button button-primary" href="{{ route('admin.prospects.edit',['prospect'=>$prospect,...$filters]) }}">Editar dados</a>@endcan</header>
     <x-prospect-messages />
     <nav class="crm-detail-nav" aria-label="Seções do prospect"><a href="#identificacao">Identificação</a><a href="#localizacao">Localização</a><a href="#origens">Origens</a><a href="#historico">Histórico</a><a href="#contato">Bloqueio de contato</a></nav>
+    @foreach($googleReferences as $googleReference)<x-business-intelligence :reference="$googleReference" />@endforeach
+    <section class="crm-card my-4" aria-labelledby="commercial-title">
+        <h2 id="commercial-title">{{ $googleReferences->isEmpty() ? 'Inteligência Comercial · atividades ROTTA' : 'Atividades comerciais ROTTA' }}</h2>
+        <p class="crm-muted">Dados próprios do CRM, separados da reputação Google.</p>
+        <dl class="grid gap-4 sm:grid-cols-2">
+            <div><dt>Prioridade</dt><dd>{{ \App\Models\Prospect::PRIORITIES[$prospect->priority] }}</dd></div>
+            <div><dt>Responsável comercial</dt><dd>{{ $prospect->assignee?->name ?: 'Sem responsável' }}</dd></div>
+            <div><dt>Situação comercial</dt><dd>{{ $prospect->commercial_status === 'identified' ? 'Identificado · interesse ainda não registrado' : $prospect->commercial_status }}</dd></div>
+            <div><dt>Observações internas</dt><dd class="crm-pre-wrap">{{ $prospect->notes ?: 'Nenhuma observação registrada' }}</dd></div>
+        </dl>
+        <a class="crm-context-link" href="#historico">Consultar histórico de relacionamento</a>
+        <p class="crm-muted text-sm">Visitas, próximas ações estruturadas e sugestões de abordagem por IA ainda não estão implementadas.</p>
+    </section>
     <div class="crm-detail-grid">
         <section class="crm-card" id="identificacao"><h2>Informações comerciais</h2><dl>
-            @foreach(['business_name','category','email','phone','website','instagram','notes'] as $field)<div><dt>{{ \App\Models\Prospect::FIELDS[$field] }}</dt><dd class="crm-pre-wrap">{{ $prospect->$field ?: 'Não informado' }}</dd></div>@endforeach
-            <div><dt>Responsável</dt><dd>{{ $prospect->assignee?->name ?: 'Sem responsável' }}</dd></div><div><dt>Prioridade</dt><dd>{{ \App\Models\Prospect::PRIORITIES[$prospect->priority] }}</dd></div>
+            @foreach(['business_name','category','email','phone','website','instagram'] as $field)<div><dt>{{ \App\Models\Prospect::FIELDS[$field] }}</dt><dd class="crm-pre-wrap">{{ $prospect->$field ?: 'Não informado' }}</dd></div>@endforeach
+
         </dl></section>
         <section class="crm-card" id="localizacao"><h2>Endereço e localização</h2><dl>@foreach(['postal_code','street','street_number','complement','neighborhood','city','state'] as $field)<div><dt>{{ \App\Models\Prospect::FIELDS[$field] }}</dt><dd>{{ $prospect->$field ?: 'Não informado' }}</dd></div>@endforeach</dl></section>
         <section class="crm-card"><h2>Campos confirmados</h2><ul>@forelse($prospect->confirmed_fields ?? [] as $field=>$confirmation)<li>{{ \App\Models\Prospect::FIELDS[$field] }} · {{ $confirmers[$confirmation['admin_id']] ?? 'Administrador' }} · {{ \Carbon\Carbon::parse($confirmation['at'])->format('d/m/Y H:i') }} @if($confirmation['source_id'] ?? null) · Origem {{ $confirmation['source_id'] }} @endif</li>@empty<li>Nenhum campo foi marcado como verificado.</li>@endforelse</ul></section>
@@ -24,7 +37,7 @@
         </section>
         <section class="crm-card" id="origens"><h2>Origens e referências</h2>
             @if($googleReferences->isNotEmpty())
-                <aside class="prospect-source"><h3>Referências do Explorador</h3><p>Somente Place IDs foram conservados. Os dados comerciais abaixo têm a origem manual indicada separadamente.</p><ul>@foreach($googleReferences as $googleReference)<li><code class="break-all">{{ $googleReference->place_id }}</code> · Vinculado em {{ $googleReference->linked_at->format('d/m/Y H:i') }}</li>@endforeach</ul><a href="{{ route('admin.explorer.index') }}">Abrir Explorador de Negócios</a>{{ $googleReferences->links('admin.pagination') }}</aside>
+                <aside class="prospect-source"><h3>Referências do Explorador</h3><p>O vínculo Google utiliza o Place ID. Consulte nas origens a proveniência dos campos comerciais; reputação e resumos desta tela não são conservados.</p><ul>@foreach($googleReferences as $googleReference)<li><code class="break-all">{{ $googleReference->place_id }}</code> · Vinculado em {{ $googleReference->linked_at->format('d/m/Y H:i') }}</li>@endforeach</ul><a href="{{ route('admin.explorer.index') }}">Abrir Explorador de Negócios</a>{{ $googleReferences->links('admin.pagination') }}</aside>
             @endif
             @foreach($sources as $source)<article class="prospect-source"><h3>Registro manual · {{ $source->created_at->format('d/m/Y H:i') }}</h3><p>{{ $source->origin_reference ?: 'Informado diretamente pelo administrador' }}</p><p>Autor: {{ $source->author->name }}</p><p>Coleta: {{ $source->collected_at?->format('d/m/Y') ?: 'Data desconhecida' }} · Verificação: {{ $source->verified_at?->format('d/m/Y') ?: 'Não informada' }}</p><p>Restrições: {{ $source->usage_restrictions ?: 'Não informadas; não presumir autorização de reutilização' }}</p><p>Finalidade: {{ $source->purpose }}</p><p class="crm-muted">Referência interna: {{ $source->id }} · Informação manual; não constitui licença de conteúdo externo.</p></article>@endforeach
             {{ $sources->links('admin.pagination') }}

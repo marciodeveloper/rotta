@@ -14,6 +14,8 @@ return [
     'google_import_enabled' => (bool) env('GOOGLE_PLACES_IMPORT_ENABLED', false),
     'google_persistence_enabled' => (bool) env('GOOGLE_PLACES_PERSISTENCE_ENABLED', false),
     'enterprise_enabled' => (bool) env('GOOGLE_PLACES_ENTERPRISE_ENABLED', false),
+    'reputation_enabled' => (bool) env('GOOGLE_PLACES_REPUTATION_ENABLED', false),
+    'review_summary_enabled' => (bool) env('GOOGLE_PLACES_REVIEW_SUMMARY_ENABLED', false),
     // Server-reviewed permission registry, keyed by Place ID; never infer a license from public access.
     'independent_sources' => json_decode(env('BUSINESS_ENRICHMENT_SOURCES', '{}'), true) ?: [],
 ];

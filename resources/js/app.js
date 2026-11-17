@@ -1,3 +1,6 @@
+if (document.querySelector('[data-commercial-intelligence]')) {
+    import('./commercial-intelligence').then(({ installCommercialIntelligence }) => installCommercialIntelligence());
+}
 import Alpine from '@alpinejs/csp';
 import { installProspectForms } from './prospect-forms';
 installProspectForms();

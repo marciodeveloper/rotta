@@ -17,7 +17,7 @@ class GooglePlacesProvider implements BusinessSearchProvider
 {
     public const FIELDS = ['id', 'displayName', 'formattedAddress', 'primaryTypeDisplayName', 'googleMapsUri', 'attributions'];
 
-    public const DETAIL_FIELDS = [...self::FIELDS, 'addressComponents', 'primaryType', 'types', 'businessStatus'];
+    public const DETAIL_FIELDS = [...self::FIELDS, 'addressComponents', 'primaryType', 'types', 'businessStatus', 'googleMapsLinks'];
 
     public const ENTERPRISE_FIELDS = ['nationalPhoneNumber', 'internationalPhoneNumber', 'websiteUri', 'regularOpeningHours', 'rating', 'userRatingCount'];
 
@@ -90,13 +90,43 @@ class GooglePlacesProvider implements BusinessSearchProvider
             $extra['opening_hours'] = array_map(fn ($value) => mb_substr($value, 0, 200), array_filter(array_slice(is_array($hours) ? $hours : [], 0, 7), 'is_string'));
         }
 
-        return [...$this->normalize($data), ...$extra, 'queried_at' => now()->toIso8601String(), 'sku' => $enterprise ? 'Enterprise' : 'Pro', 'address_fields' => $components,
+        return [...$this->normalize($data), ...$extra, 'maps_links' => GoogleMapsLinks::forPlace($placeId, is_array($data['googleMapsLinks'] ?? null) ? $data['googleMapsLinks'] : [], self::httpsUrl($data['googleMapsUri'] ?? null)), 'queried_at' => now()->toIso8601String(), 'sku' => $enterprise ? 'Enterprise' : 'Pro', 'address_fields' => $components,
             'primary_type' => is_string($data['primaryType'] ?? null) ? mb_substr($data['primaryType'], 0, 100) : '',
             'types' => array_values(array_filter(array_slice(is_array($data['types'] ?? null) ? $data['types'] : [], 0, 30), 'is_string')),
             'business_status' => match ($data['businessStatus'] ?? null) {
                 'OPERATIONAL' => 'Em operação', 'CLOSED_TEMPORARILY' => 'Temporariamente fechado', 'CLOSED_PERMANENTLY' => 'Permanentemente fechado', default => 'Não informado',
             },
         ];
+    }
+
+    public function intelligence(string $placeId, bool $summary = false): array
+    {
+        if (! config('business_explorer.enterprise_enabled') || ! config('business_explorer.reputation_enabled') || ($summary && ! config('business_explorer.review_summary_enabled'))) {
+            throw new PlacesUnavailable('Esta consulta opcional está desabilitada. Solicite a habilitação ao administrador.', 422);
+        }
+        $mask = ['id', 'attributions', 'rating', 'userRatingCount', 'googleMapsLinks'];
+        if ($summary) {
+            $mask[] = 'reviewSummary';
+        }
+        $data = $this->request('get', 'places/'.rawurlencode($placeId), implode(',', $mask), ['languageCode' => 'pt-BR', 'regionCode' => 'BR']);
+        if (($data['id'] ?? null) !== $placeId) {
+            throw new PlacesUnavailable('O Google retornou detalhes inválidos. Refaça a pesquisa.', 502);
+        }
+        $review = $data['reviewSummary'] ?? null;
+        $complete = is_array($review) && is_string($review['text']['text'] ?? null) && trim($review['text']['text']) !== ''
+            && is_string($review['disclosureText']['text'] ?? null) && trim($review['disclosureText']['text']) !== ''
+            && GoogleMapsLinks::safe($review['reviewsUri'] ?? null) && GoogleMapsLinks::safe($review['flagContentUri'] ?? null);
+        $rating = $data['rating'] ?? null;
+        $count = $data['userRatingCount'] ?? null;
+
+        return ['maps_links' => GoogleMapsLinks::forPlace($placeId, is_array($data['googleMapsLinks'] ?? null) ? $data['googleMapsLinks'] : []),
+            'rating' => is_numeric($rating) && $rating >= 0 && $rating <= 5 ? (float) $rating : null,
+            'rating_count' => is_int($count) && $count >= 0 ? $count : null,
+            'review_summary' => $summary && $complete ? ['text' => $review['text']['text'], 'disclosure' => $review['disclosureText']['text'],
+                'reviews_url' => $review['reviewsUri'], 'flag_url' => $review['flagContentUri']] : null,
+            'summary_status' => ! $summary ? 'not_requested' : ($complete ? 'available' : ($review === null ? 'unavailable' : 'incomplete_attribution')),
+            'attributions' => $this->normalize($data)['attributions'], 'queried_at' => now()->toIso8601String(),
+            'sku' => $summary ? 'Enterprise + Atmosphere' : 'Enterprise'];
     }
 
     private function request(string $method, string $path, string $mask, array $data): array
@@ -215,7 +245,7 @@ class GooglePlacesProvider implements BusinessSearchProvider
             }
         }
 
-        return ['place_id' => $place['id'], 'name' => $text($place['displayName']['text'] ?? null), 'address' => $text($place['formattedAddress'] ?? null), 'category' => $text($place['primaryTypeDisplayName']['text'] ?? null), 'maps_url' => $maps, 'attributions' => $attributions];
+        return ['place_id' => $place['id'], 'name' => $text($place['displayName']['text'] ?? null), 'address' => $text($place['formattedAddress'] ?? null), 'category' => $text($place['primaryTypeDisplayName']['text'] ?? null), 'maps_url' => $maps, 'maps_links' => GoogleMapsLinks::forPlace($place['id'], [], $maps), 'attributions' => $attributions];
     }
 
     public static function httpsUrl(mixed $value): ?string
